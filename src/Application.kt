@@ -14,22 +14,15 @@ fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 @kotlin.jvm.JvmOverloads
 fun Application.module(testing: Boolean = false) {
     routing {
-        get("/") {
-            call.respondText("HELLO WORLD!", contentType = ContentType.Text.Plain)
+        get( "/status" ) {
+            call.respondText("{\"result\":\"OK\", \"status\":\"working\"}", contentType = ContentType.Application.Json)
         }
 
-        get("/html-dsl") {
-            call.respondHtml {
-                body {
-                    h1 { +"HTML" }
-                    ul {
-                        for (n in 1..10) {
-                            li { +"$n" }
-                        }
-                    }
-                }
-            }
+        get ("{...}") {
+            call.response.status(HttpStatusCode.NotFound)
+            call.respondText("{\"result\":\"FAILED\", \"error_code\":\"UNKNOWNREQUEST\",\"error_message\":\"Unknown request\"}", contentType = ContentType.Application.Json)
         }
+
     }
 }
 
