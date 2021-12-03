@@ -3,7 +3,12 @@ package sunhill.Items
 import sunhill.DataPool.DataPoolBase
 import kotlin.math.roundToInt
 
-abstract class ItemBase(unit_int: String, semantic_int: String, type: String ) {
+open class ItemBase(unit_int: String,
+                        semantic_int: String,
+                        type: String,
+                        update: String,
+                        readable_to: Int = 0,
+                        writeable_to: Int = -1 ) {
 
     private var _unit_int: String
 
@@ -15,12 +20,21 @@ abstract class ItemBase(unit_int: String, semantic_int: String, type: String ) {
 
     private var _type: String
 
+    private var _update: String
+
+    private var _readable_to: Int
+
+    private var _writeable_to: Int
+
     init {
         this._unit_int = unit_int
         this._unit = translateUnit(unit_int)
         this._semantic_int = semantic_int
         this._semantic = translateSemantic(semantic_int)
         this._type = type
+        this._update = update
+        this._readable_to = readable_to
+        this._writeable_to = writeable_to
     }
 
     /**
@@ -45,27 +59,54 @@ abstract class ItemBase(unit_int: String, semantic_int: String, type: String ) {
     private fun translateSemantic(semantic_int: String): String
     {
         return when (semantic_int) {
-            "temp" -> { translate("Temperature") }
-            "air_temp" ->{ translate("Air temperature") }
-            "uptime" -> { translate( "Uptime") }
-            "number" -> { translate("Number") }
-            "capacity" -> { translate("Capacity") }
+            "temp" -> { "Temperature" }
+            "air_temp" ->{ "Air temperature" }
+            "uptime" -> {  "Uptime" }
+            "number" -> { "Number" }
+            "capacity" -> { "Capacity" }
             else -> { "" }
         }
     }
 
-    public fun get(request: String, datapool: DataPoolBase): String
+    private fun error(error_id: String, error_message: String): String
     {
-        return  "{"+
+        return "{\"result\":\"FAILED\",\"error_code\":\"$error_id\",\"error_message\":\"$error_message\"}"
+    }
+
+    fun get(request: String, datapool: DataPoolBase, userlevel: Int = 0, vararg additional: String ): String
+    {
+        if (this._readable_to == -1)
+            return this.error("ITEMNOTREADABLE","The item is not readable.")
+        else if (userlevel < this._readable_to)
+            return this.error("READINGNOTALLOWED", "You are not allowed to read this item.")
+        else
+            return  "{"+
                 getResult()+
                 getRequest(request)+
                 getUnitInt()+
                 getUnit()+
                 getSemanticInt()+
                 getSemantic()+
-                getValue(datapool)+
-                getHumanReadableValue(datapool)+
+                getType()+
+                getUpdate()+
+                getStamp()+
+                getValue(datapool, additional)+
+                getHumanReadableValue(datapool, additional)+
                 "}"
+    }
+
+    fun put(request: String, datapool: DataPoolBase, value: Any, userlevel: Int = 0,vararg additional: String): String
+    {
+        return if (this._writeable_to == -1)
+            this.error("ITEMNOTWRITEABLE", "The item is not writeable.")
+        else  if (userlevel < this._writeable_to)
+            this.error("WRITINGNOTALLOWED", "You are not allowed to write this item.")
+        else {
+            "{"+
+                    getResult()+
+                    getRequest(request)+
+                    "}"
+        }
     }
 
     private fun getJSONPart(key: String, value: String, addComma: Boolean = true): String
@@ -100,62 +141,48 @@ abstract class ItemBase(unit_int: String, semantic_int: String, type: String ) {
 
     private fun getSemantic(): String
     {
+        return getJSONPart("semantic", "")
+    }
+
+    private fun getType(): String
+    {
+        return getJSONPart("type",_type)
+    }
+
+    private fun getUpdate(): String
+    {
+        return getJSONPart("update", _update)
+    }
+
+    private fun getStamp(): String
+    {
+        return getJSONPart("stamp",System.currentTimeMillis().toString())
+    }
+
+    open fun getValueFromPool(datapool: DataPoolBase, additional: Array<out String>): Any?
+    {
+        return null
+    }
+
+    open fun setValueToPool(datapool: DataPoolBase, value: Any, additional: Array<out String>)
+    {
 
     }
 
-    fun translate(item: String, lan: String = "de"): String
+    private fun getValue(datapool: DataPoolBase,additional: Array<out String>): String
     {
-        when (lan) {
-            "en" -> {
-                return item
-            }
-            "de" -> {
-                return translate_de(item)
-            }
-            else -> {
-                return item
-            }
-        }
-    }
-
-    private fun translate_de(item : String): String
-    {
-        when (item) {
-            "second" -> { return "Sekunde" }
-            "seconds" -> { return "Sekunden" }
-            "minute" -> { return "Minute" }
-            "minutes" -> { return "Minuten" }
-            "hour" -> { return "Stunde" }
-            "hours" -> { return "Stunden" }
-            "day" -> { return "Tag" }
-            "days" -> { return "Tage" }
-            "year" -> { return "Jahr" }
-            "years" -> { return "Jahre" }
-            "Temperature" -> { return "Temperatur" }
-            "Air temperature" -> { return "Lufttemperatur" }
-            "Uptime" -> { return "Laufzeit" }
-            "Number" -> { return "Nummer" }
-            "Capacity" -> { return "Kapazität" }
-            else -> { return item }
-        }
-    }
-
-    internal abstract fun getValueFromPool(datapool: DataPoolBase): Any
-
-    private fun getValue(datapool: DataPoolBase): String
-    {
-        val value: Any = getValueFromPool(datapool)
+        val value: Any = getValueFromPool(datapool, additional)!!
 
         return "\"value\":"+(when (this._type) {
             "Integer", "Float" -> { value.toString() }
             else -> { "\""+value.toString()+"\""}})+","
     }
 
-    private fun getHumanReadableValue(datapool: DataPoolBase): String
+    private fun getHumanReadableValue(datapool: DataPoolBase,additional: Array<out String>): String
     {
-        val value: Any = getValueFromPool(datapool)
+        val value: Any = getValueFromPool(datapool,additional)!!
 
-        return getJSONPart("human_readable_value", when (this._unit) {
+        return getJSONPart("human_readable_value", when (this._unit_int) {
             "d" -> getDuration(value)
             "K" -> getCapacity(value)
             " " -> value.toString()
@@ -168,22 +195,22 @@ abstract class ItemBase(unit_int: String, semantic_int: String, type: String ) {
         var timespan : Int = duration.toString().toDouble().roundToInt()
 
         val seconds = timespan%60
-        val sec_str = if (seconds == 1) "1 "+translate("second") else ""+seconds+" "+translate("seconds")
+        val sec_str = if (seconds == 1) "1 second" else ""+seconds+" seconds"
         timespan /= 60
 
         val minutes = timespan%60
-        val min_str = if (minutes == 1) "1 "+translate("minute") else ""+minutes+" "+translate("minutes")
+        val min_str = if (minutes == 1) "1 minute" else ""+minutes+" minutes"
         timespan /= 60
 
         val hours = timespan%24
-        val hour_str = if (hours == 1) "1 "+translate("hour") else ""+hours+" "+translate("hours")
+        val hour_str = if (hours == 1) "1 hour" else ""+hours+" hours"
         timespan /= 24
 
         val days = timespan%365
-        val day_str = if (days == 1) "1 "+translate("day") else ""+days+" "+translate("days")
+        val day_str = if (days == 1) "1 day" else ""+days+" days"
 
         val years = timespan / 365
-        val year_str = if (years == 1) "1 "+translate("year") else ""+years+" "+translate("years")
+        val year_str = if (years == 1) "1 year" else ""+years+" years"
 
         return if (years > 0) year_str + " " + day_str
         else if (days > 0) day_str + " " + hour_str
