@@ -22,8 +22,7 @@ class UptimeDurationItemTest {
         assertThatJson(result).isObject().containsEntry("type","Float")
         assertThatJson(result).isObject().containsEntry("result","OK")
         assertThatJson(result).isObject().containsEntry("update","asap")
-        assertThatJson(result).isObject().containsEntry("human_readable_value","1 Stunde 29 Minuten")
-        assertThatJson(result).isObject().containsEntry("value",5340.99.toFloat())
+        assertThatJson(result).isObject().containsEntry("human_readable_value","1 hour 29 minutes")
     }
 
 }

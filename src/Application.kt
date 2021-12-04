@@ -7,6 +7,19 @@ import io.ktor.routing.*
 import io.ktor.http.*
 import io.ktor.html.*
 import kotlinx.html.*
+import sunhill.Marketeers.UptimeMarketeer
+import sunhill.Marketplace.Marketplace
+import sunhill.marketeers.MarketeerBase
+
+object MyMarketplace : Marketplace() {
+
+    override fun getMarketeerList(): Array<MarketeerBase>
+    {
+        return arrayOf(
+            UptimeMarketeer()
+        )
+    }
+}
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
@@ -16,6 +29,10 @@ fun Application.module(testing: Boolean = false) {
     routing {
         get( "/status" ) {
             call.respondText("{\"result\":\"OK\", \"status\":\"working\"}", contentType = ContentType.Application.Json)
+        }
+
+        get ("/item/{path}") {
+            call.respondText(MyMarketplace.get(call.parameters["path"]!!), contentType = io.ktor.http.ContentType.Application.Json)
         }
 
         get ("{...}") {

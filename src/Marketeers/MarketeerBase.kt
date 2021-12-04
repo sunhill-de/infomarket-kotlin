@@ -5,6 +5,8 @@ import sunhill.Items.ItemBase
 
 abstract class MarketeerBase {
 
+  var data_pool: DataPoolBase? = null
+
   /**
    * Returns a map string->item where the provided items are given back
    */
@@ -23,8 +25,10 @@ abstract class MarketeerBase {
     for ((offering,item) in offerings) {
       params.clear()
       if (offerMatches(search,offering,params)) {
-        val datapool = getDatapool()
-        return item.get(search,datapool,userlevel,params)
+        if (data_pool == null) {
+          data_pool = getDatapool()
+        }
+        return item.get(search,data_pool,userlevel,params)
       }
     }
     return null
