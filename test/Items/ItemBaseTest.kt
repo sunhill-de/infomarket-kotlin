@@ -10,7 +10,7 @@ class DummyDatapool : DataPoolBase() {
 
 class ReadOnlyTestItem : ItemBase("d","uptime","Integer","asap") {
 
-    override fun getValueFromPool(datapool: DataPoolBase, additional: Array<out String>): Any
+    override fun getValueFromPool(datapool: DataPoolBase?, additional: MutableList<String>): Any
     {
         return 1000
     }
@@ -19,7 +19,7 @@ class ReadOnlyTestItem : ItemBase("d","uptime","Integer","asap") {
 
 class WriteOnlyTestItem : ItemBase("d","uptime","Integer","asap", readable_to = -1, writeable_to = 0) {
 
-    override fun getValueFromPool(datapool: DataPoolBase, additional: Array<out String>): Any
+    override fun getValueFromPool(datapool: DataPoolBase?, additional: MutableList<String>): Any
     {
         return "ABC"
     }
@@ -29,7 +29,7 @@ class WriteOnlyTestItem : ItemBase("d","uptime","Integer","asap", readable_to = 
 
 class ReadWriteTestItem : ItemBase(" ","count","Integer","asap", readable_to = 10, writeable_to = 10) {
 
-    override fun getValueFromPool(datapool: DataPoolBase, additional: Array<out String>): Any
+    override fun getValueFromPool(datapool: DataPoolBase?, additional: MutableList<String>): Any
     {
         return (additional[0].toInt())*10
     }
@@ -56,7 +56,7 @@ class ItemBaseTest {
         fun testWriteError() {
             var test : ReadOnlyTestItem = ReadOnlyTestItem()
             val dummy : DummyDatapool = DummyDatapool()
-            var result = test.put("test.request", datapool = dummy,"ABC")
+            var result = test.put("test.request", "ABC", datapool = dummy)
             assertThatJson(result).isObject().containsEntry("result","FAILED")
             assertThatJson(result).isObject().containsEntry("error_code","ITEMNOTWRITEABLE")
         }
@@ -77,7 +77,7 @@ class ItemBaseTest {
         fun testWrite() {
             var test : WriteOnlyTestItem = WriteOnlyTestItem()
             val dummy : DummyDatapool = DummyDatapool()
-            var result = test.put("test.request", datapool = dummy, 10)
+            var result = test.put("test.request", 10, datapool = dummy)
             assertThatJson(result).isObject().containsEntry("result","OK")
         }
 
@@ -89,7 +89,7 @@ class ItemBaseTest {
         fun testInsufficientReadRights() {
             var test : ReadWriteTestItem = ReadWriteTestItem()
             val dummy : DummyDatapool = DummyDatapool()
-            var result = test.get("test.request", datapool = dummy,0,"2")
+            var result = test.get("test.request", datapool = dummy,0, mutableListOf<String>("2"))
             assertThatJson(result).isObject().containsEntry("result","FAILED")
             assertThatJson(result).isObject().containsEntry("error_code","READINGNOTALLOWED")
         }
@@ -98,7 +98,7 @@ class ItemBaseTest {
         fun testInsufficientWriteRights() {
             var test : ReadWriteTestItem = ReadWriteTestItem()
             val dummy : DummyDatapool = DummyDatapool()
-            var result = test.put("test.request", datapool = dummy, 10,0, "2")
+            var result = test.put("test.request", 10, datapool = dummy, 0, mutableListOf<String>("2"))
             assertThatJson(result).isObject().containsEntry("result","FAILED")
             assertThatJson(result).isObject().containsEntry("error_code","WRITINGNOTALLOWED")
         }
@@ -107,7 +107,7 @@ class ItemBaseTest {
         fun testSufficientReadRights() {
             var test : ReadWriteTestItem = ReadWriteTestItem()
             val dummy : DummyDatapool = DummyDatapool()
-            var result = test.get("test.request", datapool = dummy, userlevel=20,"2")
+            var result = test.get("test.request", datapool = dummy, userlevel=20,mutableListOf<String>("2"))
             assertThatJson(result).isObject().containsEntry("result","OK")
             assertThatJson(result).isObject().containsEntry("human_readable_value","20")
         }
@@ -116,10 +116,10 @@ class ItemBaseTest {
         fun testSufficientWriteRights() {
             var test : ReadWriteTestItem = ReadWriteTestItem()
             val dummy : DummyDatapool = DummyDatapool()
-            var result = test.put("test.request", datapool = dummy, 10, userlevel = 20, "2")
+            var result = test.put("test.request", 10, datapool = dummy, userlevel = 20, mutableListOf<String>("2"))
             assertThatJson(result).isObject().containsEntry("result","OK")
         }
 
     }
-    
+
 }

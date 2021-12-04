@@ -73,7 +73,7 @@ open class ItemBase(unit_int: String,
         return "{\"result\":\"FAILED\",\"error_code\":\"$error_id\",\"error_message\":\"$error_message\"}"
     }
 
-    fun get(request: String, datapool: DataPoolBase, userlevel: Int = 0, vararg additional: String ): String
+    open fun get(request: String, datapool: DataPoolBase? = null, userlevel: Int = 0, additional: MutableList<String> = mutableListOf()): String
     {
         if (this._readable_to == -1)
             return this.error("ITEMNOTREADABLE","The item is not readable.")
@@ -95,7 +95,11 @@ open class ItemBase(unit_int: String,
                 "}"
     }
 
-    fun put(request: String, datapool: DataPoolBase, value: Any, userlevel: Int = 0,vararg additional: String): String
+    fun put(request: String,
+            value: Any,
+            datapool: DataPoolBase? = null,
+            userlevel: Int = 0,
+            additional: MutableList<String> = mutableListOf()): String
     {
         return if (this._writeable_to == -1)
             this.error("ITEMNOTWRITEABLE", "The item is not writeable.")
@@ -159,17 +163,17 @@ open class ItemBase(unit_int: String,
         return getJSONPart("stamp",System.currentTimeMillis().toString())
     }
 
-    open fun getValueFromPool(datapool: DataPoolBase, additional: Array<out String>): Any?
+    open fun getValueFromPool(datapool: DataPoolBase?, additional: MutableList<String>): Any?
     {
         return null
     }
 
-    open fun setValueToPool(datapool: DataPoolBase, value: Any, additional: Array<out String>)
+    open fun setValueToPool(datapool: DataPoolBase?, value: Any, additional: MutableList<String>)
     {
 
     }
 
-    private fun getValue(datapool: DataPoolBase,additional: Array<out String>): String
+    private fun getValue(datapool: DataPoolBase?,additional: MutableList<String>): String
     {
         val value: Any = getValueFromPool(datapool, additional)!!
 
@@ -178,7 +182,7 @@ open class ItemBase(unit_int: String,
             else -> { "\""+value.toString()+"\""}})+","
     }
 
-    private fun getHumanReadableValue(datapool: DataPoolBase,additional: Array<out String>): String
+    private fun getHumanReadableValue(datapool: DataPoolBase?,additional: MutableList<String>): String
     {
         val value: Any = getValueFromPool(datapool,additional)!!
 
