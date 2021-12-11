@@ -44,8 +44,8 @@ class ItemBaseTest {
 
         @Test
         fun testSimpleGet() {
-            var test : ReadOnlyTestItem = ReadOnlyTestItem()
-            val dummy : DummyDatapool = DummyDatapool()
+            val test = ReadOnlyTestItem()
+            val dummy = DummyDatapool()
             val result = test.get("test.request", dummy)
             assertThatJson(result).isObject().containsEntry("request","test.request")
             assertThatJson(result).isObject().containsEntry("human_readable_value","16 minutes 40 seconds")
@@ -54,8 +54,8 @@ class ItemBaseTest {
 
         @Test
         fun testWriteError() {
-            var test : ReadOnlyTestItem = ReadOnlyTestItem()
-            val dummy : DummyDatapool = DummyDatapool()
+            var test = ReadOnlyTestItem()
+            val dummy = DummyDatapool()
             var result = test.put("test.request", "ABC", datapool = dummy)
             assertThatJson(result).isObject().containsEntry("result","FAILED")
             assertThatJson(result).isObject().containsEntry("error_code","ITEMNOTWRITEABLE")
@@ -66,8 +66,8 @@ class ItemBaseTest {
 
         @Test
         fun testReadError() {
-            var test : WriteOnlyTestItem = WriteOnlyTestItem()
-            val dummy : DummyDatapool = DummyDatapool()
+            var test = WriteOnlyTestItem()
+            val dummy = DummyDatapool()
             var result = test.get("test.request", datapool = dummy)
             assertThatJson(result).isObject().containsEntry("result","FAILED")
             assertThatJson(result).isObject().containsEntry("error_code","ITEMNOTREADABLE")
@@ -75,9 +75,9 @@ class ItemBaseTest {
 
         @Test
         fun testWrite() {
-            var test : WriteOnlyTestItem = WriteOnlyTestItem()
-            val dummy : DummyDatapool = DummyDatapool()
-            var result = test.put("test.request", 10, datapool = dummy)
+            val test = WriteOnlyTestItem()
+            val dummy = DummyDatapool()
+            val result = test.put("test.request", 10, datapool = dummy)
             assertThatJson(result).isObject().containsEntry("result","OK")
         }
 
@@ -87,8 +87,8 @@ class ItemBaseTest {
 
         @Test
         fun testInsufficientReadRights() {
-            var test : ReadWriteTestItem = ReadWriteTestItem()
-            val dummy : DummyDatapool = DummyDatapool()
+            var test = ReadWriteTestItem()
+            val dummy = DummyDatapool()
             var result = test.get("test.request", datapool = dummy,0, mutableListOf<String>("2"))
             assertThatJson(result).isObject().containsEntry("result","FAILED")
             assertThatJson(result).isObject().containsEntry("error_code","READINGNOTALLOWED")
@@ -96,8 +96,8 @@ class ItemBaseTest {
 
         @Test
         fun testInsufficientWriteRights() {
-            var test : ReadWriteTestItem = ReadWriteTestItem()
-            val dummy : DummyDatapool = DummyDatapool()
+            var test = ReadWriteTestItem()
+            val dummy = DummyDatapool()
             var result = test.put("test.request", 10, datapool = dummy, 0, mutableListOf<String>("2"))
             assertThatJson(result).isObject().containsEntry("result","FAILED")
             assertThatJson(result).isObject().containsEntry("error_code","WRITINGNOTALLOWED")
@@ -105,8 +105,8 @@ class ItemBaseTest {
 
         @Test
         fun testSufficientReadRights() {
-            var test : ReadWriteTestItem = ReadWriteTestItem()
-            val dummy : DummyDatapool = DummyDatapool()
+            var test = ReadWriteTestItem()
+            val dummy = DummyDatapool()
             var result = test.get("test.request", datapool = dummy, userlevel=20,mutableListOf<String>("2"))
             assertThatJson(result).isObject().containsEntry("result","OK")
             assertThatJson(result).isObject().containsEntry("human_readable_value","20")
@@ -114,8 +114,8 @@ class ItemBaseTest {
 
         @Test
         fun testSufficientWriteRights() {
-            var test : ReadWriteTestItem = ReadWriteTestItem()
-            val dummy : DummyDatapool = DummyDatapool()
+            var test = ReadWriteTestItem()
+            val dummy = DummyDatapool()
             var result = test.put("test.request", 10, datapool = dummy, userlevel = 20, mutableListOf<String>("2"))
             assertThatJson(result).isObject().containsEntry("result","OK")
         }
