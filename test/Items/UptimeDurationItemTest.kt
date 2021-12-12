@@ -4,7 +4,7 @@ import org.junit.Test
 import io.mockk.every
 import io.mockk.spyk
 import sunhill.DataPool.UptimeDatapool
-import sunhill.Items.*
+import sunhill.Items.Uptime.*
 import net.javacrumbs.jsonunit.assertj.assertThatJson
 
 class UptimeDurationItemTest {
