@@ -44,8 +44,12 @@ class DiskDatapool: DataPoolBase() {
 
     fun getMdstat(): String
     {
-        val f = File("/proc/mstat")
-        return f.readText()
+        val f = File("/proc/mdstat")
+        return if (f.exists()) {
+            f.readText()
+        } else {
+            ""
+        }
     }
 
     protected fun getDF(): String

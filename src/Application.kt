@@ -7,6 +7,7 @@ import io.ktor.routing.*
 import io.ktor.http.*
 import io.ktor.html.*
 import kotlinx.html.*
+import sunhill.Marketeers.DiskMarketeer
 import sunhill.Marketeers.UptimeMarketeer
 import sunhill.Marketplace.Marketplace
 import sunhill.marketeers.MarketeerBase
@@ -16,7 +17,8 @@ object MyMarketplace : Marketplace() {
     override fun getMarketeerList(): Array<MarketeerBase>
     {
         return arrayOf(
-            UptimeMarketeer()
+            UptimeMarketeer(),
+            DiskMarketeer()
         )
     }
 }
