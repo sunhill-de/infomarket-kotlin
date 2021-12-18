@@ -1,5 +1,6 @@
 package sunhill.Items
 
+import junit.framework.TestCase.assertEquals
 import org.junit.Test
 import net.javacrumbs.jsonunit.assertj.assertThatJson
 import sunhill.DataPool.DataPoolBase
@@ -59,6 +60,22 @@ class ItemBaseTest {
             var result = test.put("test.request", "ABC", datapool = dummy)
             assertThatJson(result).isObject().containsEntry("result","FAILED")
             assertThatJson(result).isObject().containsEntry("error_code","ITEMNOTWRITEABLE")
+        }
+
+        @Test
+        fun testGetValue() {
+            val test = ReadOnlyTestItem()
+            val dummy = DummyDatapool()
+            val result = test.getValue("test.request", dummy)
+            assertEquals("{\"value\":1000}", result)
+        }
+
+        @Test
+        fun testGetHRValue() {
+            val test = ReadOnlyTestItem()
+            val dummy = DummyDatapool()
+            val result = test.getHRValue("test.request", dummy)
+            assertEquals("{\"human_readable_value\":\"16 minutes 40 seconds\"}", result)
         }
     }
 

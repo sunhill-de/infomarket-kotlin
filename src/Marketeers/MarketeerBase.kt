@@ -14,10 +14,9 @@ abstract class MarketeerBase {
 
   abstract protected fun getDatapool(): DataPoolBase
 
-  /**
-   * Returns the answer of an item or null if this marketeer offers no matching item
-   */
-  fun getOffer(search: String,userlevel: Int = 0): String?
+  fun searchItem(search: String,
+                 userlevel: Int = 0,
+                 callback: (String, DataPoolBase, Int, MutableList<String>, ItemBase)->String): String?
   {
     val offerings = getRegisteredItemList()
     var params = mutableListOf<String>()
@@ -32,6 +31,28 @@ abstract class MarketeerBase {
       }
     }
     return null
+  }
+
+  /**
+   * Returns the answer of an item or null if this marketeer offers no matching item
+   */
+  fun getOffer(search: String,userlevel: Int = 0): String?
+  {
+    val callback: (String, DataPoolBase, Int, MutableList<String>, ItemBase) -> String =
+      { search: String, data_pool: DataPoolBase, userlevel: Int, params:MutableList<String>, item: ItemBase ->
+        item.get( search, data_pool, userlevel, params )}
+    return this.searchItem( search, userlevel, callback )
+  }
+
+  /**
+   * Returns the value of an item or null if this marketeer offers no matching item
+   */
+  fun getValue(search: String,userlevel: Int = 0): String?
+  {
+    val callback: (String, DataPoolBase, Int, MutableList<String>, ItemBase) -> String =
+      { search: String, data_pool: DataPoolBase, userlevel: Int, params:MutableList<String>, item: ItemBase ->
+        item.getValue( search, data_pool, userlevel, params )}
+    return this.searchItem( search, userlevel, callback )
   }
 
   /**

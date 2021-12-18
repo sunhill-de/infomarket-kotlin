@@ -90,9 +90,29 @@ open class ItemBase(unit_int: String,
                 getType()+
                 getUpdate()+
                 getStamp()+
-                getValue(datapool, additional)+
+                getValueJSON(datapool, additional)+
                 getHumanReadableValue(datapool, additional)+
                 "}"
+    }
+
+    open fun getValue(request: String, datapool: DataPoolBase? = null, userlevel: Int = 0, additional: MutableList<String> = mutableListOf()): String
+    {
+        if (this._readable_to == -1)
+            return this.error("ITEMNOTREADABLE","The item is not readable.")
+        else if (userlevel < this._readable_to)
+            return this.error("READINGNOTALLOWED", "You are not allowed to read this item.")
+        else
+            return  "{"+getValueJSON(datapool, additional, "")+"}"
+    }
+
+    open fun getHRValue(request: String, datapool: DataPoolBase? = null, userlevel: Int = 0, additional: MutableList<String> = mutableListOf()): String
+    {
+        if (this._readable_to == -1)
+            return this.error("ITEMNOTREADABLE","The item is not readable.")
+        else if (userlevel < this._readable_to)
+            return this.error("READINGNOTALLOWED", "You are not allowed to read this item.")
+        else
+            return  "{"+getHumanReadableValue(datapool, additional)+"}"
     }
 
     fun put(request: String,
@@ -173,13 +193,13 @@ open class ItemBase(unit_int: String,
 
     }
 
-    private fun getValue(datapool: DataPoolBase?,additional: MutableList<String>): String
+    private fun getValueJSON(datapool: DataPoolBase?, additional: MutableList<String>, tail: String=","): String
     {
         val value: Any = getValueFromPool(datapool, additional)!!
 
         return "\"value\":"+(when (this._type) {
             "Integer", "Float" -> { value.toString() }
-            else -> { "\""+value.toString()+"\""}})+","
+            else -> { "\""+value.toString()+"\""}})+tail
     }
 
     private fun getHumanReadableValue(datapool: DataPoolBase?,additional: MutableList<String>): String
