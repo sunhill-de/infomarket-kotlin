@@ -121,7 +121,9 @@ class MarketeerBaseTest {
         val list = OfferingProvider()
         val test = TestMarketeer()
         list.forEach {
-            assertEquals(it.match, test.testMatch(it.test,it.provider,it.variables))
+            var result = mutableListOf<String>()            
+            test.getOffering(it.test,result)
+            assertTrue(result.containsAll(expect)) // Note: The ordering might be different depending on implementation
         }
     } 
    
