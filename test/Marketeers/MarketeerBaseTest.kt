@@ -10,51 +10,60 @@ import sunhill.DataPool.UptimeDatapool
 import sunhill.Items.ItemBase
 import sunhill.marketeers.MarketeerBase
 
-class DummyItem1 : ItemBase(" ", semantic_int = "count", type = "Integer", "asap")
-{
-    override fun get(request: String, datapool: DataPoolBase?, userlevel: Int, additional: MutableList<String>): String
-    {
-        return "ABC"
-    }
-}
-
-class DummyItem2: ItemBase(" ", semantic_int = "count", type = "Integer", "asap")
-{
-    override fun get(request: String, datapool: DataPoolBase?, userlevel: Int, additional: MutableList<String>): String
-    {
-        return "DEF"+additional[0]
-    }
-}
-
-class TestMarketeer : MarketeerBase() {
-
-    override fun getRegisteredItemList(): Map<String, out ItemBase>
-    {
-        return mapOf(
-            "test.item" to DummyItem1(),
-            "test.?.thing" to DummyItem2()
-        )
-    }
-
-    override fun getDatapool(): DataPoolBase {
-        return DataPoolBase()
-    }
-
-    fun testMatch(test: String, offer: String, variables :MutableList<String>): Boolean
-    {
-        var found_vars = mutableListOf<String>()
-        val result = offerMatches(test,offer,found_vars)
-        if (result) {
-            assertEquals(variables,found_vars)
-        }
-        return result
-    }
-}
-
-data class OfferMatches(val test: String, val provider: String, val variables: MutableList<String>, val match: Boolean)
-
 class MarketeerBaseTest {
 
+    class DummyItem1 : ItemBase(" ", semantic_int = "count", type = "Integer", "asap")
+    {
+        override fun get(request: String, datapool: DataPoolBase?, userlevel: Int, additional: MutableList<String>): String
+        {
+            return "ABC"
+        }
+    }
+
+    class DummyItem2: ItemBase(" ", semantic_int = "count", type = "Integer", "asap")
+    {
+        override fun get(request: String, datapool: DataPoolBase?, userlevel: Int, additional: MutableList<String>): String
+        {
+            return "DEF"+additional[0]
+        }
+    }
+
+    class DummyItem3: ItemBase(" ", semantic_int = "count", type = "Integer", "asap")
+    {
+        override fun get(request: String, datapool: DataPoolBase?, userlevel: Int, additional: MutableList<String>): String
+        {
+            return "GHI"
+        }
+    }
+
+    class TestMarketeer : MarketeerBase() {
+
+        override fun getRegisteredItemList(): Map<String, out ItemBase>
+        {
+            return mapOf(
+                "test.item" to DummyItem1(),
+                "test.?.thing" to DummyItem2(),
+                "another.test.item" to DummyItem3()
+            )
+        }
+
+        override fun getDatapool(): DataPoolBase {
+            return DataPoolBase()
+        }
+
+        fun testMatch(test: String, offer: String, variables :MutableList<String>): Boolean
+        {
+            var found_vars = mutableListOf<String>()
+            val result = offerMatches(test,offer,found_vars)
+            if (result) {
+                assertEquals(variables,found_vars)
+            }
+            return result
+        }
+    }
+
+    data class OfferMatches(val test: String, val provider: String, val variables: MutableList<String>, val match: Boolean)
+    
     @Test
     fun testOfferMatches()
     {
@@ -79,6 +88,7 @@ class MarketeerBaseTest {
             OfferMatches("this.is.a.test","this.?.a.?", mutableListOf<String>("is","test"),true),
             OfferMatches("this.is.a","this.is.?.test",mutableListOf<String>(),false),
             OfferMatches("this.is.a.test","this.is.*",mutableListOf<String>("a.test"),true),
+            OfferMatches("another.test.item","another.test.item",mutableListOf<String>(),true), // Reduntant rest!
         )
     }
 
@@ -103,4 +113,24 @@ class MarketeerBaseTest {
         assertNull(test.getOffer("non.existing.path"))
     }
 
+    data class OfferingMatches(val test: String, val expect: MutableList<String>)
+
+    @Test
+    fun testGetOffering()
+    {
+        val list = OfferingProvider()
+        val test = TestMarketeer()
+        list.forEach {
+            assertEquals(it.match, test.testMatch(it.test,it.provider,it.variables))
+        }
+    } 
+   
+    fun OfferingProvider(): Array<OfferingMatches>
+    {
+        return arrayOf(
+            OfferingMatches("test.*",mutableListOf("test.item","test.count","test.a.thing","test.b.thing")),
+            OfferingMatches("*",mutableListOf("test.item","test.count","test.a.thing","test.b.thing","another.test.item")),
+            OfferingMatches("test.?.item",mutableListOf("test.a.thing","test.b.thing"))
+        )
+    }    
 }
