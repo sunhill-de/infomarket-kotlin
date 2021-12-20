@@ -34,6 +34,13 @@ abstract class MarketeerBase {
   }
 
   /**
+   * Returns every item that this marketeer offers 
+   */
+  fun getOffering(search: String, result: MutableList<String>)
+  {
+  }
+  
+  /**
    * Returns the answer of an item or null if this marketeer offers no matching item
    */
   fun getOffer(search: String,userlevel: Int = 0): String?
