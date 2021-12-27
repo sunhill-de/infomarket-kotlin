@@ -56,6 +56,18 @@ abstract class MarketeerBase {
   }
 
   /**
+   * Returns the value of an item or null if this marketeer offers no matching item
+   */
+  fun getHRValue(search: String,userlevel: Int = 0): String?
+  {
+    val callback: (String, DataPoolBase, Int, MutableList<String>, ItemBase) -> String =
+      { search: String, data_pool: DataPoolBase, userlevel: Int, params:MutableList<String>, item: ItemBase ->
+        item.getHRValue( search, data_pool, userlevel, params )}
+    return this.searchItem( search, userlevel, callback )
+  }
+
+
+  /**
    * Returns true if the given search string matches the offered string. If there are placeholders in the offer
    * return the matching parts of the search string in the array result
    */

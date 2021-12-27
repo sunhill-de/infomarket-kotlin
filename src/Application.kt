@@ -37,6 +37,14 @@ fun Application.module(testing: Boolean = false) {
             call.respondText(MyMarketplace.get(call.parameters["path"]!!), contentType = io.ktor.http.ContentType.Application.Json)
         }
 
+        get ("/value/{path}") {
+            call.respondText(MyMarketplace.getValue(call.parameters["path"]!!), contentType = io.ktor.http.ContentType.Application.Json)
+        }
+
+        get ("/hrvalue/{path}") {
+            call.respondText(MyMarketplace.getHRValue(call.parameters["path"]!!), contentType = io.ktor.http.ContentType.Application.Json)
+        }
+
         get ("{...}") {
             call.response.status(HttpStatusCode.NotFound)
             call.respondText("{\"result\":\"FAILED\", \"error_code\":\"UNKNOWNREQUEST\",\"error_message\":\"Unknown request\"}", contentType = ContentType.Application.Json)

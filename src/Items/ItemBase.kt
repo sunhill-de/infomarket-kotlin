@@ -73,6 +73,9 @@ open class ItemBase(unit_int: String,
         return "{\"result\":\"FAILED\",\"error_code\":\"$error_id\",\"error_message\":\"$error_message\"}"
     }
 
+    /**
+     * Return the complete descriptor for this item with all constant and variable (meta)data
+     */
     open fun get(request: String, datapool: DataPoolBase? = null, userlevel: Int = 0, additional: MutableList<String> = mutableListOf()): String
     {
         if (this._readable_to == -1)
@@ -95,6 +98,9 @@ open class ItemBase(unit_int: String,
                 "}"
     }
 
+    /**
+     * Returns only the current value as a json string
+     */
     open fun getValue(request: String, datapool: DataPoolBase? = null, userlevel: Int = 0, additional: MutableList<String> = mutableListOf()): String
     {
         if (this._readable_to == -1)
@@ -105,6 +111,9 @@ open class ItemBase(unit_int: String,
             return  "{"+getValueJSON(datapool, additional, "")+"}"
     }
 
+    /**
+     * Returns only the current human readable value as a json string
+     */
     open fun getHRValue(request: String, datapool: DataPoolBase? = null, userlevel: Int = 0, additional: MutableList<String> = mutableListOf()): String
     {
         if (this._readable_to == -1)
