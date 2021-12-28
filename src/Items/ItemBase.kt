@@ -290,7 +290,43 @@ open class ItemBase(path: String,
         }
     }
 
-    fun addOfferings(search: String, result: MutableList<String>) {
-        result.add(this._path)
+    /**
+     * This method has to be overwritten for items that support variables
+     */
+    open fun getAllOfferings(): MutableList<String>
+    {
+        return mutableListOf<String>(this._path)
     }
+
+    fun addOfferings(search: String, result: MutableList<String>) {
+        val offerings = getAllOfferings()
+        for (offer in offerings) {
+            if (offeringMatches(offer,search)) {
+                result.add(offer)
+            }
+        }
+    }
+
+    private fun offeringMatches(offer: String,search: String): Boolean
+    {
+        val offer_parts = offer.split(".")
+        val search_parts = search.split(".")
+        var i = 0
+        while (true) {
+            if ((i > offer_parts.count()) && (i > search_parts.count())) {
+                return true
+            }
+            if ((i > offer_parts.count()) || (i > search_parts.count())) {
+                return false
+            }
+            if (search_parts[i].equals("*")) {
+                return true
+            }
+            if (!search_parts[i].equals(offer_parts[i])) {
+                return false
+            }
+            i++;
+        }
+    }
+
 }

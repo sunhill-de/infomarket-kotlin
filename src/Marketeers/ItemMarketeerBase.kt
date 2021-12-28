@@ -2,6 +2,7 @@ package sunhill.Marketeers
 
 import sunhill.DataPool.DataPoolBase
 import sunhill.Items.ItemBase
+import sunhill.Items.PoolItemBase
 import sunhill.marketeers.MarketeerBase
 
 abstract class ItemMarketeerBase: MarketeerBase() {
@@ -17,10 +18,16 @@ abstract class ItemMarketeerBase: MarketeerBase() {
         for (item in items) {
             val additional = mutableListOf<String>()
             if (item.matches(search,userLevel,additional)) {
+                this.prepareItem(item,additional)
                 return SearchResult(item,additional)
             }
         }
         return null
+    }
+
+    open fun prepareItem(item: ItemBase,additional: MutableList<String>)
+    {
+
     }
 
     override fun getOffering(search: String): MutableList<String>

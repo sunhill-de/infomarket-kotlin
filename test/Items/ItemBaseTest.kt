@@ -33,6 +33,19 @@ class ReadWriteTestItem : ItemBase("test.request"," ","count","Integer","asap", 
 
 }
 
+class IndexedTestItem : ItemBase("test.#.request"," ","count","Integer","asap") {
+
+    override fun calculateValue(additional: MutableList<String>): Any
+    {
+        return (additional[0].toInt())*10
+    }
+
+    override fun getAllOfferings() : MutableList<String> {
+        return mutableListOf("test.0.request","test.1.request")
+    }
+
+
+}
 
 class ItemBaseTest {
 
@@ -113,6 +126,41 @@ class ItemBaseTest {
             )
         }
 
+        @Test
+        fun testAddOfferings()
+        {
+            val test = ReadOnlyTestItem()
+            val result = mutableListOf<String>();
+            test.addOfferings("*",result)
+            assertEquals(mutableListOf<String>("test.request"),result)
+        }
+
+        @Test
+        fun testAddOfferings2()
+        {
+            val test = ReadOnlyTestItem()
+            val result = mutableListOf<String>();
+            test.addOfferings("test.*",result)
+            assertEquals(mutableListOf<String>("test.request"),result)
+        }
+
+        @Test
+        fun testAddOfferings3()
+        {
+            val test = ReadOnlyTestItem()
+            val result = mutableListOf<String>();
+            test.addOfferings("something.*",result)
+            assertEquals(mutableListOf<String>(),result)
+        }
+
+        @Test
+        fun testAddOfferings4()
+        {
+            val test = IndexedTestItem()
+            val result = mutableListOf<String>();
+            test.addOfferings("*",result)
+            assertEquals(mutableListOf<String>("test.0.request","test.1.request"),result)
+        }
 
     }
 
