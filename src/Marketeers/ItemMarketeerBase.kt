@@ -25,7 +25,7 @@ abstract class ItemMarketeerBase: MarketeerBase() {
         return null
     }
 
-    open fun prepareItem(item: ItemBase,additional: MutableList<String>)
+    open fun prepareItem(item: ItemBase,additional: MutableList<String> = mutableListOf<String>())
     {
 
     }
@@ -35,6 +35,7 @@ abstract class ItemMarketeerBase: MarketeerBase() {
         val items = getRegisteredItemList()
         val result = mutableListOf<String>()
         for (item in items) {
+            prepareItem(item)
             item.addOfferings(search,result)
         }
         return result

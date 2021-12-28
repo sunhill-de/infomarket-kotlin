@@ -11,4 +11,11 @@ class PartitionFilesystemItem : PoolItemBase("system.partitions.#.filesystem"," 
         return (datapool as DiskDatapool).partitions!![additional[0].toInt()].filesystem
     }
 
+    override fun getAllOfferings() : MutableList<String> {
+        val result = mutableListOf<String>()
+        for (i in 0..(data_pool!! as DiskDatapool).disks!!.count()) {
+            result.add("system.partitions."+i.toString()+".filesystem")
+        }
+        return result
+    }
 }

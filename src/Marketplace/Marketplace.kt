@@ -39,5 +39,20 @@ abstract class Marketplace {
         return "{\"result\":\"failed\",\"error_code\":\"ITEMNOTFOUND\",\"error_message\":\"The item was not found.\"}"
     }
 
+    fun getOffering(path: String): String
+    {
+        val result = mutableListOf<String>();
+        val marketeers = getMarketeerList()
+
+        for (marketeer in marketeers) {
+            result.addAll(marketeer.getOffering(path))
+        }
+
+        var returning = """{"offering":["""
+        for (line in result) {
+            returning += "\""+line+"\",\n"
+        }
+        return returning+"""""]}"""
+    }
 
 }
