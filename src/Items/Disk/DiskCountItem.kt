@@ -2,12 +2,13 @@ package sunhill.Items.Disk
 
 import sunhill.DataPool.DataPoolBase
 import sunhill.DataPool.DiskDatapool
-import sunhill.Items.ItemBase
+import sunhill.Items.PoolItemBase
 
-class DiskCountItem : ItemBase(" ", "count", "Integer", "late") {
+class DiskCountItem : PoolItemBase("system.disk.count"," ", "count", "Integer", "late") {
 
-    override fun getValueFromPool(datapool: DataPoolBase?, additional: MutableList<String>): Any {
-        return (datapool as DiskDatapool).disks!!.count()
+    override fun calculateValue(additional: MutableList<String>): Any?
+    {
+        return (data_pool as DiskDatapool).disks!!.count()
     }
 
 }

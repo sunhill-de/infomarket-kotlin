@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit
  * all items access this pool to provide their data. Datapools store the raw data not json answers. This data
  * has to be converted by the item and/or marketeer
  */
-open class DataPoolBase {
+abstract class DataPoolBase {
 
     fun String.runCommand(
         workingDir: File = File("."),
@@ -22,4 +22,6 @@ open class DataPoolBase {
             .start().also { it.waitFor(timeoutAmount, timeoutUnit) }
             .inputStream.bufferedReader().readText()
     }.onFailure { it.printStackTrace() }.getOrNull()
+
+    abstract fun update()
 }

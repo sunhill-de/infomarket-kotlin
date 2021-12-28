@@ -11,7 +11,7 @@ abstract class Marketplace {
         val marketeers = getMarketeerList()
 
         for (marketeer in marketeers) {
-            var response = marketeer.getOffer(path)
+            var response = marketeer.getItem(path)
             if (response != null) return response
         }
         return "{\"result\":\"failed\",\"error_code\":\"ITEMNOTFOUND\",\"error_message\":\"The item was not found.\"}"

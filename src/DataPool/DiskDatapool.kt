@@ -157,6 +157,10 @@ class DiskDatapool: DataPoolBase() {
         readLsBlk()
         readMDStat()
     }
+
+    override fun update() {
+        readInformations()
+    }
 }
 
 

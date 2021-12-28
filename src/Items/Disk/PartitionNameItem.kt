@@ -3,8 +3,9 @@ package sunhill.Items.Disk
 import sunhill.DataPool.DataPoolBase
 import sunhill.DataPool.DiskDatapool
 import sunhill.Items.ItemBase
+import sunhill.Items.PoolItemBase
 
-class PartitionNameItem : ItemBase(" ", "name", "String", "late") {
+class PartitionNameItem : PoolItemBase("system.partitions.#.name"," ", "name", "String", "late") {
 
     override fun getValueFromPool(datapool: DataPoolBase?, additional: MutableList<String>): Any {
         return (datapool as DiskDatapool).partitions!![additional[0].toInt()].name

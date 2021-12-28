@@ -3,12 +3,15 @@ package sunhill.Items
 import sunhill.DataPool.DataPoolBase
 import kotlin.math.roundToInt
 
-open class ItemBase(unit_int: String,
-                        semantic_int: String,
-                        type: String,
-                        update: String,
-                        readable_to: Int = 0,
-                        writeable_to: Int = -1 ) {
+open class ItemBase(path: String,
+                    unit_int: String,
+                    semantic_int: String,
+                    type: String,
+                    update: String,
+                    readable_to: Int = 0,
+                    writeable_to: Int = -1 ) {
+
+    private var _path: String
 
     private var _unit_int: String
 
@@ -27,6 +30,7 @@ open class ItemBase(unit_int: String,
     private var _writeable_to: Int
 
     init {
+        this._path = path
         this._unit_int = unit_int
         this._unit = translateUnit(unit_int)
         this._semantic_int = semantic_int
@@ -76,7 +80,7 @@ open class ItemBase(unit_int: String,
     /**
      * Return the complete descriptor for this item with all constant and variable (meta)data
      */
-    open fun get(request: String, datapool: DataPoolBase? = null, userlevel: Int = 0, additional: MutableList<String> = mutableListOf()): String
+    open fun get(request: String, userlevel: Int = 0, additional: MutableList<String> = mutableListOf()): String
     {
         if (this._readable_to == -1)
             return this.error("ITEMNOTREADABLE","The item is not readable.")
@@ -93,40 +97,39 @@ open class ItemBase(unit_int: String,
                 getType()+
                 getUpdate()+
                 getStamp()+
-                getValueJSON(datapool, additional)+
-                getHumanReadableValue(datapool, additional)+
+                getValueJSON(additional)+
+                getHumanReadableValue(additional)+
                 "}"
     }
 
     /**
      * Returns only the current value as a json string
      */
-    open fun getValue(request: String, datapool: DataPoolBase? = null, userlevel: Int = 0, additional: MutableList<String> = mutableListOf()): String
+    open fun getValue(request: String, userlevel: Int = 0, additional: MutableList<String> = mutableListOf()): String
     {
         if (this._readable_to == -1)
             return this.error("ITEMNOTREADABLE","The item is not readable.")
         else if (userlevel < this._readable_to)
             return this.error("READINGNOTALLOWED", "You are not allowed to read this item.")
         else
-            return  "{"+getValueJSON(datapool, additional, "")+"}"
+            return  "{"+getValueJSON(additional, "")+"}"
     }
 
     /**
      * Returns only the current human readable value as a json string
      */
-    open fun getHRValue(request: String, datapool: DataPoolBase? = null, userlevel: Int = 0, additional: MutableList<String> = mutableListOf()): String
+    open fun getHRValue(request: String, userlevel: Int = 0, additional: MutableList<String> = mutableListOf()): String
     {
         if (this._readable_to == -1)
             return this.error("ITEMNOTREADABLE","The item is not readable.")
         else if (userlevel < this._readable_to)
             return this.error("READINGNOTALLOWED", "You are not allowed to read this item.")
         else
-            return  "{"+getHumanReadableValue(datapool, additional)+"}"
+            return  "{"+getHumanReadableValue(additional)+"}"
     }
 
     fun put(request: String,
             value: Any,
-            datapool: DataPoolBase? = null,
             userlevel: Int = 0,
             additional: MutableList<String> = mutableListOf()): String
     {
@@ -192,28 +195,23 @@ open class ItemBase(unit_int: String,
         return getJSONPart("stamp",System.currentTimeMillis().toString())
     }
 
-    open fun getValueFromPool(datapool: DataPoolBase?, additional: MutableList<String>): Any?
+    open fun calculateValue(additional: MutableList<String>): Any?
     {
         return null
     }
 
-    open fun setValueToPool(datapool: DataPoolBase?, value: Any, additional: MutableList<String>)
+    private fun getValueJSON(additional: MutableList<String>, tail: String=","): String
     {
-
-    }
-
-    private fun getValueJSON(datapool: DataPoolBase?, additional: MutableList<String>, tail: String=","): String
-    {
-        val value: Any = getValueFromPool(datapool, additional)!!
+        val value: Any = calculateValue(additional)!!
 
         return "\"value\":"+(when (this._type) {
             "Integer", "Float" -> { value.toString() }
             else -> { "\""+value.toString()+"\""}})+tail
     }
 
-    private fun getHumanReadableValue(datapool: DataPoolBase?,additional: MutableList<String>): String
+    private fun getHumanReadableValue(additional: MutableList<String>): String
     {
-        val value: Any = getValueFromPool(datapool,additional)!!
+        val value: Any = calculateValue(additional)!!
 
         return getJSONPart("human_readable_value", when (this._unit_int) {
             "d" -> getDuration(value)
@@ -256,5 +254,43 @@ open class ItemBase(unit_int: String,
     {
         var size : Int = capacity.toString().toInt()
         return ""+size+" Bytes"
+    }
+
+    fun matches(search: String, userLevel: Int, additional: MutableList<String>): Boolean
+    {
+        val test_parts = search.split('.')
+        val offer_parts = _path.split('.')
+        var i = 0
+
+        while (true) {
+            if ((i == test_parts.count()) && (i == offer_parts.count())) {
+                // At this points both strings are equal and we can quit
+                return true
+            }
+            if ((i == test_parts.count()) || (i == offer_parts.count())) {
+                // Both string are not the same length, so they doesn't match
+                return false
+            }
+            when (offer_parts[i]) {
+                "#" -> {
+                    if (test_parts[i].toIntOrNull() == null) { // If not an int, then return false (this rule doesn't match)
+                        return false
+                    }
+                    additional.add(test_parts[i])
+                }
+                "?" -> additional.add(test_parts[i])
+                "*" -> {
+                    additional.add(test_parts.drop(i).joinToString(".")) // Drop the parts until * and return the rest joined by "."
+                    return true
+                }
+                else -> if (test_parts[i] != offer_parts[i])
+                    return false
+            }
+            i++
+        }
+    }
+
+    fun addOfferings(search: String, result: MutableList<String>) {
+        result.add(this._path)
     }
 }

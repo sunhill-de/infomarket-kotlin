@@ -6,15 +6,15 @@ import sunhill.Items.Uptime.*
 import sunhill.Items.ItemBase
 import sunhill.marketeers.MarketeerBase
 
-class UptimeMarketeer : MarketeerBase() {
+class UptimeMarketeer : PoolMarketeerBase() {
 
-    override fun getRegisteredItemList(): Map<String, out ItemBase>
+    override fun getRegisteredItemList(): List<ItemBase>
     {
-        return mapOf(
-            "system.uptime.duration" to UptimeDurationItem(),
-            "system.uptime.seconds" to UptimeSecondsItem(),
-            "system.idletime.duration" to IdletimeDurationItem(),
-            "system.idletime.seconds" to IdletimeSecondsItem()
+        return listOf<ItemBase>(
+             UptimeDurationItem(),
+             UptimeSecondsItem(),
+             IdletimeDurationItem(),
+             IdletimeSecondsItem()
         )
     }
 

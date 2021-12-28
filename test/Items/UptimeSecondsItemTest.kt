@@ -16,8 +16,8 @@ class UptimeSecondsItemTest {
         every { pool.readUptimeFile() } returns "5340.99 15710.18"
 
         val test: UptimeSecondsItem = UptimeSecondsItem()
-
-        val result: String = test.get("test.request", pool)
+        test.setDataPool(pool)
+        val result: String = test.get("test.request")
         assertThatJson(result).isObject().containsEntry("request","test.request")
         assertThatJson(result).isObject().containsEntry("type","Float")
         assertThatJson(result).isObject().containsEntry("human_readable_value","5340.99 s")

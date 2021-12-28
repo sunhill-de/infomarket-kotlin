@@ -10,6 +10,10 @@ class MemoryDatapool: DataPoolBase() {
     {
         return ""
     }
+
+    override fun update() {
+        TODO("Not yet implemented")
+    }
 }
 
 

@@ -4,6 +4,7 @@ import io.mockk.every
 import io.mockk.spyk
 import junit.framework.Assert.assertNull
 import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.assertTrue
 import org.junit.Test
 import sunhill.DataPool.DataPoolBase
 import sunhill.DataPool.UptimeDatapool
@@ -12,105 +13,63 @@ import sunhill.marketeers.MarketeerBase
 
 class MarketeerBaseTest {
 
-    class DummyItem1 : ItemBase(" ", semantic_int = "count", type = "Integer", "asap")
+    class DummyItem1 : ItemBase("test.item"," ", semantic_int = "count", type = "Integer", "asap")
     {
-        override fun get(request: String, datapool: DataPoolBase?, userlevel: Int, additional: MutableList<String>): String
+        override fun get(request: String, userlevel: Int, additional: MutableList<String>): String
         {
             return "ABC"
         }
     }
 
-    class DummyItem2: ItemBase(" ", semantic_int = "count", type = "Integer", "asap")
+    class DummyItem2: ItemBase("test.?.thing"," ", semantic_int = "count", type = "Integer", "asap")
     {
-        override fun get(request: String, datapool: DataPoolBase?, userlevel: Int, additional: MutableList<String>): String
+        override fun get(request: String, userlevel: Int, additional: MutableList<String>): String
         {
             return "DEF"+additional[0]
         }
     }
 
-    class DummyItem3: ItemBase(" ", semantic_int = "count", type = "Integer", "asap")
+    class DummyItem3: ItemBase("another.test.item"," ", semantic_int = "count", type = "Integer", "asap")
     {
-        override fun get(request: String, datapool: DataPoolBase?, userlevel: Int, additional: MutableList<String>): String
+        override fun get(request: String, userlevel: Int, additional: MutableList<String>): String
         {
             return "GHI"
         }
     }
 
-    class TestMarketeer : MarketeerBase() {
+    class TestMarketeer : ItemMarketeerBase() {
 
-        override fun getRegisteredItemList(): Map<String, out ItemBase>
+        override fun getRegisteredItemList(): List<ItemBase>
         {
-            return mapOf(
-                "test.item" to DummyItem1(),
-                "test.?.thing" to DummyItem2(),
-                "another.test.item" to DummyItem3()
+            return listOf(
+                DummyItem1(),
+                DummyItem2(),
+                DummyItem3()
             )
         }
 
-        override fun getDatapool(): DataPoolBase {
-            return DataPoolBase()
-        }
-
-        fun testMatch(test: String, offer: String, variables :MutableList<String>): Boolean
-        {
-            var found_vars = mutableListOf<String>()
-            val result = offerMatches(test,offer,found_vars)
-            if (result) {
-                assertEquals(variables,found_vars)
-            }
-            return result
-        }
     }
 
-    data class OfferMatches(val test: String, val provider: String, val variables: MutableList<String>, val match: Boolean)
-    
-    @Test
-    fun testOfferMatches()
-    {
-        val list = OfferMatchesProvider()
-        val test = TestMarketeer()
-        list.forEach {
-            assertEquals(it.match, test.testMatch(it.test,it.provider,it.variables))
-        }
-    }
-
-    fun OfferMatchesProvider(): Array<OfferMatches>
-    {
-        return arrayOf(
-            OfferMatches("this.is.a.test","this.is.a.test", mutableListOf<String>(),true),
-            OfferMatches("this.is.a.test","this.is.another.test", mutableListOf<String>(),false),
-            OfferMatches("this.is.a.test","this.is.a", mutableListOf<String>(),false),
-            OfferMatches("this.is.a","this.is.a.test", mutableListOf<String>(),false),
-            OfferMatches("this.is.a.test","this.is.?.test", mutableListOf<String>("a"),true),
-            OfferMatches("this.is.a.test","this.is.?.testing", mutableListOf<String>(),false),
-            OfferMatches("this.is.a.test","this.is.#.test", mutableListOf<String>(),false),
-            OfferMatches("this.is.1.test","this.is.#.test", mutableListOf<String>("1"),true),
-            OfferMatches("this.is.a.test","this.?.a.?", mutableListOf<String>("is","test"),true),
-            OfferMatches("this.is.a","this.is.?.test",mutableListOf<String>(),false),
-            OfferMatches("this.is.a.test","this.is.*",mutableListOf<String>("a.test"),true),
-            OfferMatches("another.test.item","another.test.item",mutableListOf<String>(),true), // Reduntant rest!
-        )
-    }
 
     @Test
     fun testMatchPass1()
     {
         val test = TestMarketeer()
-        assertEquals("ABC",test.getOffer("test.item"))
+        assertEquals("ABC",test.getItem("test.item"))
     }
 
     @Test
     fun testMatchPass2()
     {
         val test = TestMarketeer()
-        assertEquals("DEFa",test.getOffer("test.a.thing"))
+        assertEquals("DEFa",test.getItem("test.a.thing"))
     }
 
     @Test
     fun testMatchFail()
     {
         val test = TestMarketeer()
-        assertNull(test.getOffer("non.existing.path"))
+        assertNull(test.getItem("non.existing.path"))
     }
 
     data class OfferingMatches(val test: String, val expect: MutableList<String>)
@@ -122,8 +81,8 @@ class MarketeerBaseTest {
         val test = TestMarketeer()
         list.forEach {
             var result = mutableListOf<String>()            
-            test.getOffering(it.test,result)
-            assertTrue(result.containsAll(expect)) // Note: The ordering might be different depending on implementation
+            test.getOffering(it.test)
+            assertTrue(result.containsAll(it.expect)) // Note: The ordering might be different depending on implementation
         }
     } 
    

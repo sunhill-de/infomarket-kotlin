@@ -52,4 +52,8 @@ class UptimeDatapool : DataPoolBase() {
         _uptime = parts.elementAt(0).toDouble()
         _idletime = parts.elementAt(1).toDouble()
     }
+
+    override fun update() {
+        readBothValues()
+    }
 }

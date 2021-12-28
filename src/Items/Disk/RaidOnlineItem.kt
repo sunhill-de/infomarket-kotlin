@@ -2,9 +2,9 @@ package sunhill.Items.Disk
 
 import sunhill.DataPool.DataPoolBase
 import sunhill.DataPool.DiskDatapool
-import sunhill.Items.ItemBase
+import sunhill.Items.PoolItemBase
 
-class RaidOnlineItem : ItemBase(" ", "name", "String", "late") {
+class RaidOnlineItem : PoolItemBase("system.raid.#.online"," ", "name", "String", "late") {
 
     override fun getValueFromPool(datapool: DataPoolBase?, additional: MutableList<String>): Any {
         return (datapool as DiskDatapool).raids!![additional[0].toInt()].online
