@@ -5,7 +5,7 @@ import sunhill.DataPool.UptimeDatapool
 import sunhill.Items.ItemBase
 import sunhill.Items.PoolItemBase
 
-class IdletimeDurationItem : PoolItemBase("system.idletime.seconds",
+class IdletimeDurationItem : PoolItemBase("system.idletime.duration",
     "d",
     "uptime",
     "Float",

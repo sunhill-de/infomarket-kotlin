@@ -14,7 +14,7 @@ class DiskStateItem : PoolItemBase("system.disks.#.state"," ", "state", "String"
     override fun getAllOfferings() : MutableList<String> {
         val result = mutableListOf<String>()
         for (i in 0..(data_pool!! as DiskDatapool).disks!!.count()) {
-            result.add("system.disks."+i.toString()+".size")
+            result.add("system.disks."+i.toString()+".state")
         }
         return result
     }
