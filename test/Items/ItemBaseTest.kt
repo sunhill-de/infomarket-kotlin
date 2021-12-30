@@ -40,11 +40,30 @@ class IndexedTestItem : ItemBase("test.#.request"," ","count","Integer","asap") 
         return (additional[0].toInt())*10
     }
 
-    override fun getAllOfferings() : MutableList<String> {
-        return mutableListOf("test.0.request","test.1.request")
+    override fun getPermutation(parts: MutableList<String>,index: Int): List<String>?
+    {
+        return listOf("0","1")
     }
 
+}
 
+class MultiIndexedTestItem : ItemBase("test.#.request.#.item"," ","count","Integer","asap") {
+
+    override fun calculateValue(additional: MutableList<String>): Any
+    {
+        return additional[0].toInt()*additional[1].toInt()
+    }
+
+    override fun getPermutation(parts: MutableList<String>,index: Int): List<String>?
+    {
+        if (index == 0) {
+            return listOf("0","1")
+        } else if (parts[1].equals("0")) {
+            return listOf("0","1")
+        } else {
+            return listOf("0","1","2")
+        }
+    }
 }
 
 class ItemBaseTest {
@@ -160,6 +179,21 @@ class ItemBaseTest {
             val result = mutableListOf<String>();
             test.addOfferings("*",result)
             assertEquals(mutableListOf<String>("test.0.request","test.1.request"),result)
+        }
+
+        @Test
+        fun testAddOfferings5()
+        {
+            val test = MultiIndexedTestItem()
+            val result = mutableListOf<String>();
+            test.addOfferings("*",result)
+            assertEquals(mutableListOf<String>(
+                "test.0.request.0.item",
+                "test.0.request.1.item",
+                "test.1.request.0.item",
+                "test.1.request.1.item",
+                "test.1.request.2.item",
+            ),result)
         }
 
     }

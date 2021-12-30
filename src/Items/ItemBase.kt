@@ -295,7 +295,38 @@ open class ItemBase(path: String,
      */
     open fun getAllOfferings(): MutableList<String>
     {
-        return mutableListOf<String>(this._path)
+        val result =  mutableListOf<String>()
+        val parts = _path.split(".").toMutableList()
+        handlePermutations(parts,0, result)
+        return result
+    }
+
+    fun handlePermutations(parts: MutableList<String>,index: Int,result: MutableList<String>)
+    {
+        var i = 0;
+        while (i<parts.count()) {
+            if (parts[i].equals("#") || parts[i].equals("?") || (parts[i].equals("*"))) {
+                var list = getPermutation(parts,index)
+                if (list !== null) {
+                    val backup = parts[i]
+                    for (entry in list) {
+                        parts[i] = entry
+                        handlePermutations(parts,index+1,result)
+                    }
+                    parts[i] = backup
+                    return
+                } else {
+                    TODO("This is a bug! This shouldnt happen")
+                }
+            }
+            i++;
+        }
+        result.add(parts.joinToString(separator = "."))
+    }
+
+    open fun getPermutation(parts: MutableList<String>,index: Int): List<String>?
+    {
+        return null
     }
 
     fun addOfferings(search: String, result: MutableList<String>) {
