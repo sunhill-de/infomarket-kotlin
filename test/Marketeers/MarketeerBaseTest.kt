@@ -13,28 +13,54 @@ import sunhill.marketeers.MarketeerBase
 
 class MarketeerBaseTest {
 
-    class DummyItem1 : ItemBase("test.item"," ", semantic_int = "count", type = "Integer", "asap")
+    class DummyItem1 : ItemBase("test.item"," ", semantic_int = "name", type = "String", "asap")
     {
-        override fun get(request: String, userlevel: Int, additional: MutableList<String>): String
+        override fun calculateValue(additional: MutableList<String>): Any?
         {
             return "ABC"
         }
     }
 
-    class DummyItem2: ItemBase("test.?.thing"," ", semantic_int = "count", type = "Integer", "asap")
+    class DummyItem2: ItemBase("test.?.thing"," ", semantic_int = "name", type = "String", "asap")
     {
-        override fun get(request: String, userlevel: Int, additional: MutableList<String>): String
+        override fun calculateValue(additional: MutableList<String>): Any?
         {
             return "DEF"+additional[0]
         }
+
+        override fun getPermutation(parts: MutableList<String>,index: Int): List<String>?
+        {
+            return listOf("a","b")
+        }
+
     }
 
-    class DummyItem3: ItemBase("another.test.item"," ", semantic_int = "count", type = "Integer", "asap")
+    class DummyItem3: ItemBase("another.test.item"," ", semantic_int = "name", type = "String", "asap")
     {
-        override fun get(request: String, userlevel: Int, additional: MutableList<String>): String
+        override fun calculateValue(additional: MutableList<String>): Any?
         {
             return "GHI"
         }
+
+    }
+
+    class DummyItem4: ItemBase("we.test.?.another.?.item"," ", semantic_int = "name", type = "String", "asap")
+    {
+        override fun calculateValue(additional: MutableList<String>): Any?
+        {
+            return "JKL"+additional[0]+"M"
+        }
+
+        override fun getPermutation(parts: MutableList<String>,index: Int): List<String>? {
+            if (index == 0) {
+                return listOf("A", "B")
+            } else if (parts[2].equals("A")) {
+                return listOf("0", "1")
+            } else {
+                return listOf("0", "1", "2")
+            }
+        }
+
     }
 
     class TestMarketeer : ItemMarketeerBase() {
@@ -44,7 +70,8 @@ class MarketeerBaseTest {
             return listOf(
                 DummyItem1(),
                 DummyItem2(),
-                DummyItem3()
+                DummyItem3(),
+                DummyItem4()
             )
         }
 
@@ -55,14 +82,14 @@ class MarketeerBaseTest {
     fun testMatchPass1()
     {
         val test = TestMarketeer()
-        assertEquals("ABC",test.getItem("test.item"))
+        assertEquals("""{"value":"ABC"}""",test.getValue("test.item"))
     }
 
     @Test
     fun testMatchPass2()
     {
         val test = TestMarketeer()
-        assertEquals("DEFa",test.getItem("test.a.thing"))
+        assertEquals("""{"value":"DEFa"}""",test.getValue("test.a.thing"))
     }
 
     @Test
@@ -80,8 +107,7 @@ class MarketeerBaseTest {
         val list = OfferingProvider()
         val test = TestMarketeer()
         list.forEach {
-            var result = mutableListOf<String>()            
-            test.getOffering(it.test)
+            var result = test.getOffering(it.test)
             assertTrue(result.containsAll(it.expect)) // Note: The ordering might be different depending on implementation
         }
     } 
@@ -90,8 +116,23 @@ class MarketeerBaseTest {
     {
         return arrayOf(
             OfferingMatches("test.*",mutableListOf("test.item","test.count","test.a.thing","test.b.thing")),
-            OfferingMatches("*",mutableListOf("test.item","test.count","test.a.thing","test.b.thing","another.test.item")),
-            OfferingMatches("test.?.item",mutableListOf("test.a.thing","test.b.thing"))
+            OfferingMatches("*",mutableListOf(
+                "test.item",
+                "test.count",
+                "test.a.thing",
+                "test.b.thing",
+                "another.test.item",
+                "we.test.count",
+                "we.test.A.another.count",
+                "we.test.A.another.0.item",
+                "we.test.A.another.1.item",
+                "we.test.B.another.count",
+                "we.test.B.another.0.item",
+                "we.test.B.another.1.item",
+                "we.test.B.another.2.item",
+            )),
+            OfferingMatches("test.*.item",mutableListOf("test.a.thing","test.b.thing"))
         )
-    }    
+    }
+
 }

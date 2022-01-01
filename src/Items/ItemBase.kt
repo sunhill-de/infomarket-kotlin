@@ -3,6 +3,10 @@ package sunhill.Items
 import sunhill.DataPool.DataPoolBase
 import kotlin.math.roundToInt
 
+/**
+ * The base class for items. Every item has to define a constructor that gives some essential properties of this
+ * item (like type, semantic_type, etc.)
+ */
 open class ItemBase(path: String,
                     unit_int: String,
                     semantic_int: String,
@@ -28,6 +32,10 @@ open class ItemBase(path: String,
     private var _readable_to: Int
 
     private var _writeable_to: Int
+
+    private var _error_code: String? = null
+
+    private var _error_message: String? = null
 
     init {
         this._path = path
@@ -78,15 +86,30 @@ open class ItemBase(path: String,
     }
 
     /**
+     * Indicates an error condition
+     */
+    protected fun setError(error_id: String, error_message: String)
+    {
+        _error_code = error_id
+        _error_message = error_message
+    }
+
+    /**
      * Return the complete descriptor for this item with all constant and variable (meta)data
      */
-    open fun get(request: String, userlevel: Int = 0, additional: MutableList<String> = mutableListOf()): String
+    fun get(request: String, userlevel: Int = 0, additional: MutableList<String> = mutableListOf()): String
     {
-        if (this._readable_to == -1)
+        if (_error_code !== null) {
+            return error(_error_code!!,_error_message!!)
+        } else if (this._readable_to == -1)
             return this.error("ITEMNOTREADABLE","The item is not readable.")
         else if (userlevel < this._readable_to)
             return this.error("READINGNOTALLOWED", "You are not allowed to read this item.")
-        else
+        else if (request.contains(".count")) {
+            return """{"result":"OK","""+getRequest(request)+
+                   """"unit_int":" ","unit":"","semantic_int":"number","semantic":"number","type":"Integer""""+
+                   getUpdate()+getStamp()+getCount(request)+getHRCount(request)+"}"
+        } else
             return  "{"+
                 getResult()+
                 getRequest(request)+
@@ -105,7 +128,7 @@ open class ItemBase(path: String,
     /**
      * Returns only the current value as a json string
      */
-    open fun getValue(request: String, userlevel: Int = 0, additional: MutableList<String> = mutableListOf()): String
+    fun getValue(request: String, userlevel: Int = 0, additional: MutableList<String> = mutableListOf()): String
     {
         if (this._readable_to == -1)
             return this.error("ITEMNOTREADABLE","The item is not readable.")
@@ -118,7 +141,7 @@ open class ItemBase(path: String,
     /**
      * Returns only the current human readable value as a json string
      */
-    open fun getHRValue(request: String, userlevel: Int = 0, additional: MutableList<String> = mutableListOf()): String
+    fun getHRValue(request: String, userlevel: Int = 0, additional: MutableList<String> = mutableListOf()): String
     {
         if (this._readable_to == -1)
             return this.error("ITEMNOTREADABLE","The item is not readable.")
@@ -200,13 +223,49 @@ open class ItemBase(path: String,
         return null
     }
 
+    /**
+     * Gets the item value and does some checks
+     */
+    private fun retrieveValue(additional: MutableList<String>): Any
+    {
+        val value = calculateValue(additional)
+        if (value == null) {
+            setError("NOVALUE","calculateValue() returns no value")
+            return 0
+        }
+        return value!!
+    }
+
     private fun getValueJSON(additional: MutableList<String>, tail: String=","): String
     {
-        val value: Any = calculateValue(additional)!!
+        val value: Any = retrieveValue(additional)
 
         return "\"value\":"+(when (this._type) {
             "Integer", "Float" -> { value.toString() }
             else -> { "\""+value.toString()+"\""}})+tail
+    }
+
+    fun getCountNumber(request: String): Int
+    {
+        val request_parts = request.split(".")
+        val path_parts = _path.split(".")
+        var index = 0
+        for (i in 0..request_parts.count()) {
+            if (path_parts[i].equals("*") || path_parts[i].equals("#") || path_parts[i].equals("?")) {
+                index++
+            }
+        }
+        return getPermutation(request_parts.toMutableList(),index-1)!!.count()
+    }
+
+    private fun getCount(request: String, tail: String=","): String
+    {
+        return """"value":"""+getCountNumber(request).toString()+tail
+    }
+
+    private fun getHRCount(request: String): String
+    {
+        return """"human_readable_value":""""+getCountNumber(request).toString()+"\","
     }
 
     private fun getHumanReadableValue(additional: MutableList<String>): String
@@ -273,12 +332,22 @@ open class ItemBase(path: String,
             }
             when (offer_parts[i]) {
                 "#" -> {
+                    if (test_parts[i].equals("count")) {
+                        additional.add("count")
+                        return true // Stop searching here, because we request a count
+                    }
                     if (test_parts[i].toIntOrNull() == null) { // If not an int, then return false (this rule doesn't match)
                         return false
                     }
                     additional.add(test_parts[i])
                 }
-                "?" -> additional.add(test_parts[i])
+                "?" -> {
+                    additional.add(test_parts[i])
+                    if (test_parts[i].equals("count")) {
+                        additional.add("count")
+                        return true // Stop searching here, because we request a count
+                    }
+                }
                 "*" -> {
                     additional.add(test_parts.drop(i).joinToString(".")) // Drop the parts until * and return the rest joined by "."
                     return true
@@ -306,6 +375,22 @@ open class ItemBase(path: String,
         var i = 0;
         while (i<parts.count()) {
             if (parts[i].equals("#") || parts[i].equals("?") || (parts[i].equals("*"))) {
+
+                // Item pathes mustn't start with a wildcard
+                if (i == 0) {
+                    setError("MUSTNTSTARTWITHPERMUTATION",
+                    "An item path must't start with a permutation")
+                    return
+                }
+
+                // Every permutation provides a count element
+                var count_str : String = ""
+                for (j in 0..i-1) {
+                    count_str += parts[j]+"."
+                }
+                result.add(count_str+"count")
+
+                // Return all permutations
                 var list = getPermutation(parts,index)
                 if (list !== null) {
                     val backup = parts[i]
@@ -316,7 +401,8 @@ open class ItemBase(path: String,
                     parts[i] = backup
                     return
                 } else {
-                    TODO("This is a bug! This shouldnt happen")
+                    setError("GETPERMUTATIONRETURNSNULL",
+                        "The method getPermutation return null instead of expected permutation")
                 }
             }
             i++;

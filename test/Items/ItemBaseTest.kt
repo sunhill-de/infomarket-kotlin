@@ -6,67 +6,69 @@ import net.javacrumbs.jsonunit.assertj.assertThatJson
 import sunhill.DataPool.DataPoolBase
 import sunhill.Marketeers.MarketeerBaseTest
 
-class ReadOnlyTestItem : ItemBase("test.request","d","uptime","Integer","asap") {
+class ItemBaseTest {
 
-    override fun calculateValue(additional: MutableList<String>): Any
-    {
-        return 1000
-    }
+    class ReadOnlyTestItem : ItemBase("test.request","d","uptime","Integer","asap") {
 
-}
+        override fun calculateValue(additional: MutableList<String>): Any
+        {
+            return 1000
+        }
 
-class WriteOnlyTestItem : ItemBase("test.request","d","uptime","Integer","asap", readable_to = -1, writeable_to = 0) {
-
-    override fun calculateValue(additional: MutableList<String>): Any? {
-        return "ABC"
-    }
-
-
-}
-
-class ReadWriteTestItem : ItemBase("test.request"," ","count","Integer","asap", readable_to = 10, writeable_to = 10) {
-
-    override fun calculateValue(additional: MutableList<String>): Any
-    {
-        return (additional[0].toInt())*10
-    }
-
-}
-
-class IndexedTestItem : ItemBase("test.#.request"," ","count","Integer","asap") {
-
-    override fun calculateValue(additional: MutableList<String>): Any
-    {
-        return (additional[0].toInt())*10
-    }
-
-    override fun getPermutation(parts: MutableList<String>,index: Int): List<String>?
-    {
-        return listOf("0","1")
-    }
-
-}
-
-class MultiIndexedTestItem : ItemBase("test.#.request.#.item"," ","count","Integer","asap") {
-
-    override fun calculateValue(additional: MutableList<String>): Any
-    {
-        return additional[0].toInt()*additional[1].toInt()
-    }
-
-    override fun getPermutation(parts: MutableList<String>,index: Int): List<String>?
-    {
-        if (index == 0) {
-            return listOf("0","1")
-        } else if (parts[1].equals("0")) {
-            return listOf("0","1")
-        } else {
-            return listOf("0","1","2")
+        fun errorCondition() {
+            setError("TESTERROR","This is a test error")
         }
     }
-}
 
-class ItemBaseTest {
+    class WriteOnlyTestItem : ItemBase("test.request","d","uptime","Integer","asap", readable_to = -1, writeable_to = 0) {
+
+        override fun calculateValue(additional: MutableList<String>): Any? {
+            return "ABC"
+        }
+
+    }
+
+    class ReadWriteTestItem : ItemBase("test.request"," ","count","Integer","asap", readable_to = 10, writeable_to = 10) {
+
+        override fun calculateValue(additional: MutableList<String>): Any
+        {
+            return (additional[0].toInt())*10
+        }
+
+    }
+
+    class IndexedTestItem : ItemBase("test.#.request"," ","count","Integer","asap") {
+
+        override fun calculateValue(additional: MutableList<String>): Any
+        {
+            return (additional[0].toInt())*10
+        }
+
+        override fun getPermutation(parts: MutableList<String>,index: Int): List<String>?
+        {
+            return listOf("0","1")
+        }
+
+    }
+
+    class MultiIndexedTestItem : ItemBase("test.#.request.#.item"," ","count","Integer","asap") {
+
+        override fun calculateValue(additional: MutableList<String>): Any
+        {
+            return additional[0].toInt()*additional[1].toInt()
+        }
+
+        override fun getPermutation(parts: MutableList<String>,index: Int): List<String>?
+        {
+            if (index == 0) {
+                return listOf("0","1")
+            } else if (parts[1].equals("0")) {
+                return listOf("0","1")
+            } else {
+                return listOf("0","1","2")
+            }
+        }
+    }
 
     class ReadOnlyItemTest {
 
@@ -77,6 +79,17 @@ class ItemBaseTest {
             assertThatJson(result).isObject().containsEntry("request","test.request")
             assertThatJson(result).isObject().containsEntry("human_readable_value","16 minutes 40 seconds")
             assertThatJson(result).isObject().containsEntry("result","OK")
+        }
+
+        @Test
+        fun testError()
+        {
+            val test = ReadOnlyTestItem()
+            test.errorCondition()
+            val result = test.get("test.request")
+            assertThatJson(result).isObject().containsEntry("result","FAILED")
+            assertThatJson(result).isObject().containsEntry("error_code","TESTERROR")
+            assertThatJson(result).isObject().containsEntry("error_message","This is a test error")
         }
 
         @Test
@@ -178,7 +191,14 @@ class ItemBaseTest {
             val test = IndexedTestItem()
             val result = mutableListOf<String>();
             test.addOfferings("*",result)
-            assertEquals(mutableListOf<String>("test.0.request","test.1.request"),result)
+            assertEquals(mutableListOf<String>("test.count","test.0.request","test.1.request"),result)
+        }
+
+        @Test
+        fun testGetCountSimple()
+        {
+            val test = IndexedTestItem()
+            assertEquals(2,test.getCountNumber("test.count"))
         }
 
         @Test
@@ -188,12 +208,30 @@ class ItemBaseTest {
             val result = mutableListOf<String>();
             test.addOfferings("*",result)
             assertEquals(mutableListOf<String>(
+                "test.count",
+                "test.0.request.count",
                 "test.0.request.0.item",
                 "test.0.request.1.item",
+                "test.1.request.count",
                 "test.1.request.0.item",
                 "test.1.request.1.item",
                 "test.1.request.2.item",
             ),result)
+        }
+
+        @Test
+        fun testGetCountMultiindex1()
+        {
+            val test = MultiIndexedTestItem()
+            assertEquals(2,test.getCountNumber("test.count"))
+        }
+
+        @Test
+        fun testGetCountMultiindex2()
+        {
+            val test = MultiIndexedTestItem()
+            assertEquals(2,test.getCountNumber("test.0.request.count"))
+            assertEquals(3,test.getCountNumber("test.1.request.count"))
         }
 
     }
