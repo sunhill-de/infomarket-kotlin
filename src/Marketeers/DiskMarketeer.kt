@@ -10,13 +10,11 @@ class DiskMarketeer : PoolMarketeerBase() {
     override fun getRegisteredItemList(): List<ItemBase>
     {
         return listOf<ItemBase>(
-            DiskCountItem(),
             DiskNameItem(),
             DiskModellItem(),
             DiskSizeItem(),
             DiskStateItem(),
 
-            PartitionCountItem(),
             PartitionNameItem(),
             PartitionSizeItem(),
             PartitionUsedItem(),
@@ -26,7 +24,6 @@ class DiskMarketeer : PoolMarketeerBase() {
             PartitionReadonlyItem(),
             PartitionRemovableItem(),
 
-            RaidCountItem(),
             RaidNameItem(),
             RaidLevelItem(),
             RaidOnlineItem(),
