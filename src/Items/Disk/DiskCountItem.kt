@@ -1,6 +1,5 @@
 package sunhill.Items.Disk
 
-import sunhill.DataPool.DataPoolBase
 import sunhill.DataPool.DiskDatapool
 import sunhill.Items.PoolItemBase
 

@@ -17,7 +17,7 @@ class UptimeDurationItemTest {
 
         val test: UptimeDurationItem = UptimeDurationItem()
         test.setDataPool(pool)
-        val result: String = test.get("test.request")
+        val result: String = test.JSONGetItem("test.request")
         assertThatJson(result).isObject().containsEntry("request","test.request")
         assertThatJson(result).isObject().containsEntry("type","Float")
         assertThatJson(result).isObject().containsEntry("result","OK")

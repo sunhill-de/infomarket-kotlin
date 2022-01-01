@@ -1,8 +1,6 @@
 package sunhill.Marketeers
 
-import sunhill.DataPool.DataPoolBase
 import sunhill.Items.ItemBase
-import sunhill.Items.PoolItemBase
 import sunhill.marketeers.MarketeerBase
 
 abstract class ItemMarketeerBase: MarketeerBase() {

@@ -49,10 +49,10 @@ abstract class Marketplace {
         }
 
         var returning = """{"offering":["""
-        for (line in result) {
-            returning += "\""+line+"\",\n"
+        for ((index,line) in result.withIndex()) {
+            returning += (if (index == 0) "" else ",")+"\""+line+"\"\n"
         }
-        return returning+"""""]}"""
+        return returning+"]}"
     }
 
 }

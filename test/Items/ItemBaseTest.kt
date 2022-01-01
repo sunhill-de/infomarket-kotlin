@@ -3,8 +3,6 @@ package sunhill.Items
 import junit.framework.TestCase.assertEquals
 import org.junit.Test
 import net.javacrumbs.jsonunit.assertj.assertThatJson
-import sunhill.DataPool.DataPoolBase
-import sunhill.Marketeers.MarketeerBaseTest
 
 class ItemBaseTest {
 
@@ -75,7 +73,7 @@ class ItemBaseTest {
         @Test
         fun testSimpleGet() {
             val test = ReadOnlyTestItem()
-            val result = test.get("test.request")
+            val result = test.JSONGetItem("test.request")
             assertThatJson(result).isObject().containsEntry("request","test.request")
             assertThatJson(result).isObject().containsEntry("human_readable_value","16 minutes 40 seconds")
             assertThatJson(result).isObject().containsEntry("result","OK")
@@ -86,7 +84,7 @@ class ItemBaseTest {
         {
             val test = ReadOnlyTestItem()
             test.errorCondition()
-            val result = test.get("test.request")
+            val result = test.JSONGetItem("test.request")
             assertThatJson(result).isObject().containsEntry("result","FAILED")
             assertThatJson(result).isObject().containsEntry("error_code","TESTERROR")
             assertThatJson(result).isObject().containsEntry("error_message","This is a test error")
@@ -103,14 +101,14 @@ class ItemBaseTest {
         @Test
         fun testGetValue() {
             val test = ReadOnlyTestItem()
-            val result = test.getValue("test.request")
+            val result = test.JSONGetValue("test.request")
             assertEquals("{\"value\":1000}", result)
         }
 
         @Test
         fun testGetHRValue() {
             val test = ReadOnlyTestItem()
-            val result = test.getHRValue("test.request")
+            val result = test.JSONGetHRValue("test.request")
             assertEquals("{\"human_readable_value\":\"16 minutes 40 seconds\"}", result)
         }
 
@@ -198,7 +196,7 @@ class ItemBaseTest {
         fun testGetCountSimple()
         {
             val test = IndexedTestItem()
-            assertEquals(2,test.getCountNumber("test.count"))
+            assertEquals(2,test.getCount("test.count"))
         }
 
         @Test
@@ -223,15 +221,15 @@ class ItemBaseTest {
         fun testGetCountMultiindex1()
         {
             val test = MultiIndexedTestItem()
-            assertEquals(2,test.getCountNumber("test.count"))
+            assertEquals(2,test.getCount("test.count"))
         }
 
         @Test
         fun testGetCountMultiindex2()
         {
             val test = MultiIndexedTestItem()
-            assertEquals(2,test.getCountNumber("test.0.request.count"))
-            assertEquals(3,test.getCountNumber("test.1.request.count"))
+            assertEquals(2,test.getCount("test.0.request.count"))
+            assertEquals(3,test.getCount("test.1.request.count"))
         }
 
     }
@@ -241,7 +239,7 @@ class ItemBaseTest {
         @Test
         fun testReadError() {
             var test = WriteOnlyTestItem()
-            var result = test.get("test.request")
+            var result = test.JSONGetItem("test.request")
             assertThatJson(result).isObject().containsEntry("result","FAILED")
             assertThatJson(result).isObject().containsEntry("error_code","ITEMNOTREADABLE")
         }
@@ -260,7 +258,7 @@ class ItemBaseTest {
         @Test
         fun testInsufficientReadRights() {
             var test = ReadWriteTestItem()
-            var result = test.get("test.request", 0, mutableListOf<String>("2"))
+            var result = test.JSONGetItem("test.request", 0, mutableListOf<String>("2"))
             assertThatJson(result).isObject().containsEntry("result","FAILED")
             assertThatJson(result).isObject().containsEntry("error_code","READINGNOTALLOWED")
         }
@@ -276,7 +274,7 @@ class ItemBaseTest {
         @Test
         fun testSufficientReadRights() {
             var test = ReadWriteTestItem()
-            var result = test.get("test.request",  userlevel=20,mutableListOf<String>("2"))
+            var result = test.JSONGetItem("test.request",  userlevel=20,mutableListOf<String>("2"))
             assertThatJson(result).isObject().containsEntry("result","OK")
             assertThatJson(result).isObject().containsEntry("human_readable_value","20")
         }

@@ -1,11 +1,15 @@
 package sunhill.Items
 
-import sunhill.DataPool.DataPoolBase
 import kotlin.math.roundToInt
 
 /**
  * The base class for items. Every item has to define a constructor that gives some essential properties of this
  * item (like type, semantic_type, etc.)
+ * public functions:
+ * - JSONGetItem - Return the complete JSON Answer for the given request
+ * - JSONGetValue - Returns only the JSON answer with the value for the given request
+ * - JSONGetHRValue - Return only the JSON answer with the human readable value for the given request
+ * - JSONGetOffering - Returns a JSON answer for what this items offers for requests
  */
 open class ItemBase(path: String,
                     unit_int: String,
@@ -80,6 +84,9 @@ open class ItemBase(path: String,
         }
     }
 
+    /**
+     * Creates an error message for return of the getXXXX methods
+     */
     private fun error(error_id: String, error_message: String): String
     {
         return "{\"result\":\"FAILED\",\"error_code\":\"$error_id\",\"error_message\":\"$error_message\"}"
@@ -97,7 +104,7 @@ open class ItemBase(path: String,
     /**
      * Return the complete descriptor for this item with all constant and variable (meta)data
      */
-    fun get(request: String, userlevel: Int = 0, additional: MutableList<String> = mutableListOf()): String
+    fun JSONGetItem(request: String, userlevel: Int = 0, additional: MutableList<String> = mutableListOf()): String
     {
         if (_error_code !== null) {
             return error(_error_code!!,_error_message!!)
@@ -106,49 +113,64 @@ open class ItemBase(path: String,
         else if (userlevel < this._readable_to)
             return this.error("READINGNOTALLOWED", "You are not allowed to read this item.")
         else if (request.contains(".count")) {
-            return """{"result":"OK","""+getRequest(request)+
+            return """{"result":"OK","""+getJSONRequest(request)+
                    """"unit_int":" ","unit":"","semantic_int":"number","semantic":"number","type":"Integer""""+
-                   getUpdate()+getStamp()+getCount(request)+getHRCount(request)+"}"
+                   getJSONUpdate()+getJSONStamp()+getJSONCount(request)+getJSONHRCount(request)+"}"
         } else
             return  "{"+
-                getResult()+
-                getRequest(request)+
-                getUnitInt()+
-                getUnit()+
-                getSemanticInt()+
-                getSemantic()+
-                getType()+
-                getUpdate()+
-                getStamp()+
-                getValueJSON(additional)+
-                getHumanReadableValue(additional)+
+                getJSONResult()+
+                getJSONRequest(request)+
+                getJSONUnitInt()+
+                getJSONUnit()+
+                getJSONSemanticInt()+
+                getJSONSemantic()+
+                getJSONType()+
+                getJSONUpdate()+
+                getJSONStamp()+
+                getJSONValue(additional)+
+                getJSONHumanReadableValue(additional)+
                 "}"
     }
 
     /**
      * Returns only the current value as a json string
      */
-    fun getValue(request: String, userlevel: Int = 0, additional: MutableList<String> = mutableListOf()): String
+    fun JSONGetValue(request: String, userlevel: Int = 0, additional: MutableList<String> = mutableListOf()): String
     {
-        if (this._readable_to == -1)
+        if (_error_code !== null) {
+            return error(_error_code!!,_error_message!!)
+        } else if (this._readable_to == -1)
             return this.error("ITEMNOTREADABLE","The item is not readable.")
         else if (userlevel < this._readable_to)
             return this.error("READINGNOTALLOWED", "You are not allowed to read this item.")
         else
-            return  "{"+getValueJSON(additional, "")+"}"
+            return  "{"+getJSONValue(additional, "")+"}"
     }
 
     /**
      * Returns only the current human readable value as a json string
      */
-    fun getHRValue(request: String, userlevel: Int = 0, additional: MutableList<String> = mutableListOf()): String
+    fun JSONGetHRValue(request: String, userlevel: Int = 0, additional: MutableList<String> = mutableListOf()): String
     {
-        if (this._readable_to == -1)
+        if (_error_code !== null) {
+            return error(_error_code!!,_error_message!!)
+        } else if (this._readable_to == -1)
             return this.error("ITEMNOTREADABLE","The item is not readable.")
         else if (userlevel < this._readable_to)
             return this.error("READINGNOTALLOWED", "You are not allowed to read this item.")
         else
-            return  "{"+getHumanReadableValue(additional)+"}"
+            return  "{"+getJSONHumanReadableValue(additional)+"}"
+    }
+
+    fun JSONGetOffering(request: String, userlevel: Int = 0): String
+    {
+        val offering =  mutableListOf<String>()
+        addOfferings(request,offering)
+        var result = """{"result":"OK","offering":["""
+        for (i in 0..offering.count()) {
+            result += ((if (i>0) "," else ""))+"\""+offering[i]+"\""
+        }
+        return result+"]}"
     }
 
     fun put(request: String,
@@ -156,14 +178,16 @@ open class ItemBase(path: String,
             userlevel: Int = 0,
             additional: MutableList<String> = mutableListOf()): String
     {
-        return if (this._writeable_to == -1)
+        if (_error_code !== null) {
+            return error(_error_code!!,_error_message!!)
+        } else return if (this._writeable_to == -1)
             this.error("ITEMNOTWRITEABLE", "The item is not writeable.")
         else  if (userlevel < this._writeable_to)
             this.error("WRITINGNOTALLOWED", "You are not allowed to write this item.")
         else {
             "{"+
-                    getResult()+
-                    getRequest(request)+
+                    getJSONResult()+
+                    getJSONRequest(request)+
                     "}"
         }
     }
@@ -173,52 +197,115 @@ open class ItemBase(path: String,
         return "\""+key+"\":\""+value+"\""+(if (addComma) "," else "")
     }
 
-    private fun getResult(): String
+    private fun getJSONResult(): String
     {
-        return getJSONPart("result","OK")
+        return getJSONPart("result",getResult())
     }
 
-    private fun getRequest(request: String): String
+    /**
+     * Returns the result of the query (OK or FAILED)
+     */
+    fun getResult(): String
+    {
+        return if (_error_code == null) {
+            "OK"
+        } else {
+            "FAILED"
+        }
+    }
+
+    private fun getJSONRequest(request: String): String
     {
         return getJSONPart("request", request )
     }
 
-    private fun getUnitInt(): String
+    private fun getJSONUnitInt(): String
     {
-        return getJSONPart("unit_int", this._unit_int )
+        return getJSONPart("unit_int", getUnitInt() )
     }
 
-    private fun getUnit(): String
+    /**
+     * Returns the internal unit for this item
+     */
+    fun getUnitInt(): String
     {
-        return getJSONPart("unit", this._unit )
+        return _unit_int
     }
 
-    private fun getSemanticInt(): String
+    private fun getJSONUnit(): String
     {
-        return getJSONPart("semantic_int", this._semantic_int )
+        return getJSONPart("unit", getUnit() )
     }
 
-    private fun getSemantic(): String
+    fun getUnit(): String
     {
-        return getJSONPart("semantic", "")
+        return _unit
     }
 
-    private fun getType(): String
+    private fun getJSONSemanticInt(): String
     {
-        return getJSONPart("type",_type)
+        return getJSONPart("semantic_int", getSemanticInt() )
     }
 
-    private fun getUpdate(): String
+    fun getSemanticInt(): String
     {
-        return getJSONPart("update", _update)
+        return _semantic_int
     }
 
-    private fun getStamp(): String
+    private fun getJSONSemantic(): String
     {
-        return getJSONPart("stamp",System.currentTimeMillis().toString())
+        return getJSONPart("semantic", getSemantic())
     }
 
-    open fun calculateValue(additional: MutableList<String>): Any?
+    fun getSemantic(): String
+    {
+        return _semantic
+    }
+
+    private fun getJSONType(): String
+    {
+        return getJSONPart("type",getType() )
+    }
+
+    /**
+     * Returns the data type of this item (Integer, Float, String, etc)
+     */
+    fun getType(): String
+    {
+        return _type
+    }
+
+    private fun getJSONUpdate(): String
+    {
+        return getJSONPart("update", getUpdate() )
+    }
+
+    /**
+     * Returns the suggested update frequency
+     */
+    fun getUpdate(): String
+    {
+        return _update
+    }
+
+    private fun getJSONStamp(): String
+    {
+        return getJSONPart("stamp",getStamp() )
+    }
+
+    /**
+     * Returns the current timestamp
+     */
+    fun getStamp(): String
+    {
+        return System.currentTimeMillis().toString()
+    }
+
+    /**
+     * Returns the value of the item with the given additional informations
+     * Must't return null. So if not overwritten it raises an error
+     */
+    protected open fun calculateValue(additional: MutableList<String>): Any?
     {
         return null
     }
@@ -226,26 +313,27 @@ open class ItemBase(path: String,
     /**
      * Gets the item value and does some checks
      */
-    private fun retrieveValue(additional: MutableList<String>): Any
+    fun getValue(additional: MutableList<String>): Any
     {
         val value = calculateValue(additional)
         if (value == null) {
             setError("NOVALUE","calculateValue() returns no value")
             return 0
+        } else {
+            return value
         }
-        return value!!
     }
 
-    private fun getValueJSON(additional: MutableList<String>, tail: String=","): String
+    private fun getJSONValue(additional: MutableList<String>, tail: String=","): String
     {
-        val value: Any = retrieveValue(additional)
+        val value: Any = getValue(additional)
 
         return "\"value\":"+(when (this._type) {
             "Integer", "Float" -> { value.toString() }
             else -> { "\""+value.toString()+"\""}})+tail
     }
 
-    fun getCountNumber(request: String): Int
+    fun getCount(request: String): Int
     {
         val request_parts = request.split(".")
         val path_parts = _path.split(".")
@@ -255,20 +343,30 @@ open class ItemBase(path: String,
                 index++
             }
         }
-        return getPermutation(request_parts.toMutableList(),index-1)!!.count()
+        if (index == 0) {
+            setError("NOWILDCARD","The item provides no wildcards.")
+        }
+        val list = getPermutation(request_parts.toMutableList(),index-1)
+        if (list == null) {
+            setError("GETPERMUTATIONRETURNSNULL",
+                "The method getPermutation return null instead of expected permutation")
+            return 0
+        } else {
+            return list.count()
+        }
     }
 
-    private fun getCount(request: String, tail: String=","): String
+    private fun getJSONCount(request: String, tail: String=","): String
     {
-        return """"value":"""+getCountNumber(request).toString()+tail
+        return """"value":"""+getCount(request).toString()+tail
     }
 
-    private fun getHRCount(request: String): String
+    private fun getJSONHRCount(request: String): String
     {
-        return """"human_readable_value":""""+getCountNumber(request).toString()+"\","
+        return """"human_readable_value":""""+getCount(request).toString()+"\","
     }
 
-    private fun getHumanReadableValue(additional: MutableList<String>): String
+    private fun getJSONHumanReadableValue(additional: MutableList<String>): String
     {
         val value: Any = calculateValue(additional)!!
 

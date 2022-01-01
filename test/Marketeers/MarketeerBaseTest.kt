@@ -1,15 +1,10 @@
 package sunhill.Marketeers
 
-import io.mockk.every
-import io.mockk.spyk
 import junit.framework.Assert.assertNull
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
 import org.junit.Test
-import sunhill.DataPool.DataPoolBase
-import sunhill.DataPool.UptimeDatapool
 import sunhill.Items.ItemBase
-import sunhill.marketeers.MarketeerBase
 
 class MarketeerBaseTest {
 

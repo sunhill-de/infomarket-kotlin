@@ -22,7 +22,7 @@ abstract class MarketeerBase {
     if (result == null) {
       return null
     } else {
-      return result.item.get(search,userlevel = userlevel,additional = result.additional)
+      return result.item.JSONGetItem(search,userlevel = userlevel,additional = result.additional)
     }
   }
 
@@ -35,7 +35,7 @@ abstract class MarketeerBase {
     if (result == null) {
       return null
     } else {
-      return result.item.getValue(search,userlevel = userlevel,additional = result.additional)
+      return result.item.JSONGetValue(search,userlevel = userlevel,additional = result.additional)
     }
   }
 
@@ -48,7 +48,7 @@ abstract class MarketeerBase {
     if (result == null) {
       return null
     } else {
-      return result.item.getHRValue(search,userlevel = userlevel,additional = result.additional)
+      return result.item.JSONGetHRValue(search,userlevel = userlevel,additional = result.additional)
     }
   }
 
