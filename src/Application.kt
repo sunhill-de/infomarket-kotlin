@@ -2,11 +2,8 @@ package sunhill
 
 import io.ktor.application.*
 import io.ktor.response.*
-import io.ktor.request.*
 import io.ktor.routing.*
 import io.ktor.http.*
-import io.ktor.html.*
-import kotlinx.html.*
 import sunhill.Marketeers.DiskMarketeer
 import sunhill.Marketeers.UptimeMarketeer
 import sunhill.Marketplace.Marketplace
@@ -34,7 +31,7 @@ fun Application.module(testing: Boolean = false) {
         }
 
         get ("/item/{path}") {
-            call.respondText(MyMarketplace.get(call.parameters["path"]!!), contentType = io.ktor.http.ContentType.Application.Json)
+            call.respondText(MyMarketplace.getItem(call.parameters["path"]!!), contentType = io.ktor.http.ContentType.Application.Json)
         }
 
         get ("/value/{path}") {
@@ -48,6 +45,19 @@ fun Application.module(testing: Boolean = false) {
         get ("/offering/{path}") {
             call.respondText(MyMarketplace.getOffering(call.parameters["path"]!!), contentType = io.ktor.http.ContentType.Application.Json)
         }
+
+        get ("/allitems/{path}") {
+            call.respondText(MyMarketplace.getAllItems(call.parameters["path"]!!), contentType = io.ktor.http.ContentType.Application.Json)
+        }
+
+        get ("/allvalues/{path}") {
+            call.respondText(MyMarketplace.getAllValues(call.parameters["path"]!!), contentType = io.ktor.http.ContentType.Application.Json)
+        }
+
+        get ("/allhrvalues/{path}") {
+            call.respondText(MyMarketplace.getAllHRValues(call.parameters["path"]!!), contentType = io.ktor.http.ContentType.Application.Json)
+        }
+
         get ("{...}") {
             call.response.status(HttpStatusCode.NotFound)
             call.respondText("{\"result\":\"FAILED\", \"error_code\":\"UNKNOWNREQUEST\",\"error_message\":\"Unknown request\"}", contentType = ContentType.Application.Json)
