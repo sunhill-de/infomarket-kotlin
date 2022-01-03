@@ -47,9 +47,9 @@ abstract class Marketplace {
         for (marketeer in marketeers) {
             result.addAll(marketeer.getOffering(path))
         }
-
+        val unique = result.distinct()
         var returning = """{"offering":["""
-        for ((index,line) in result.withIndex()) {
+        for ((index,line) in unique.withIndex()) {
             returning += (if (index == 0) "" else ",")+"\""+line+"\"\n"
         }
         return returning+"]}"
