@@ -2,6 +2,8 @@ package sunhill.Items
 
 import kotlin.math.roundToInt
 
+data class ItemData(path: String, unit_int: String, unit: String, semantic_int: String, semantic: String,
+                    type: String, update: String, stamp: Int, value: Any?, human_readable_value: Any?) {}
 /**
  * The base class for items. Every item has to define a constructor that gives some essential properties of this
  * item (like type, semantic_type, etc.)
@@ -18,7 +20,7 @@ open class ItemBase(path: String,
                     update: String,
                     readable_to: Int = 0,
                     writeable_to: Int = -1 ) {
-
+    
     private var _path: String
 
     private var _unit_int: String
@@ -51,6 +53,44 @@ open class ItemBase(path: String,
         this._update = update
         this._readable_to = readable_to
         this._writeable_to = writeable_to
+    }
+
+    /**
+     * Translates the internal unit to the displayable unit
+     * This is a helper function for the constructor
+     */
+    private fun translateUnit(unit_int: String): String
+    {
+        return when (unit_int) {
+            "s","m" -> { unit_int }
+            "C" -> { "°C" }
+            "p" -> { "mmHg" }
+            "c" -> { "cm" }
+            "l" -> { "lx" }
+            "M" -> { "MB" }
+            "G" -> { "GB" }
+            "T" -> { "TB" }
+            "P" -> { "%" }
+            else -> { "" }
+        }
+    }
+
+    
+    /**
+     * Translates the semantic meaning to a more verbous
+     * This is a helper function for the constructor
+     */
+    private fun translateSemantic(semantic_int: String): String
+    {
+        return when (semantic_int) {
+            "temp" -> { "Temperature" }
+            "air_temp" ->{ "Air temperature" }
+            "uptime" -> {  "Uptime" }
+            "number" -> { "Number" }
+            "capacity" -> { "Capacity" }
+            "name" -> { "Name" }
+            else -> { "" }
+        }
     }
 
     /**
@@ -121,45 +161,7 @@ open class ItemBase(path: String,
     {
       return _error_message!!
     }
-    /**
-     * Translates the internal unit to the displayable unit
-     */
-    private fun translateUnit(unit_int: String): String
-    {
-        return when (unit_int) {
-            "s","m" -> { unit_int }
-            "C" -> { "°C" }
-            "p" -> { "mmHg" }
-            "c" -> { "cm" }
-            "l" -> { "lx" }
-            "M" -> { "MB" }
-            "G" -> { "GB" }
-            "T" -> { "TB" }
-            "P" -> { "%" }
-            else -> { "" }
-        }
-    }
-
-    private fun translateSemantic(semantic_int: String): String
-    {
-        return when (semantic_int) {
-            "temp" -> { "Temperature" }
-            "air_temp" ->{ "Air temperature" }
-            "uptime" -> {  "Uptime" }
-            "number" -> { "Number" }
-            "capacity" -> { "Capacity" }
-            else -> { "" }
-        }
-    }
-
-    /**
-     * Creates an error message for return of the getXXXX methods
-     */
-    private fun error(error_id: String, error_message: String): String
-    {
-        return "{\"result\":\"FAILED\",\"error_code\":\"$error_id\",\"error_message\":\"$error_message\"}"
-    }
-
+    
     /**
      * Indicates an error condition
      */
@@ -167,6 +169,68 @@ open class ItemBase(path: String,
     {
         _error_code = error_id
         _error_message = error_message
+    }
+    
+    /**
+     * Returns if the item is readable a all (independent of the given userlevel)
+     */
+    fun isReadableAtAll(): Boolean
+    {
+      return (_readable_to !== -1)
+    }
+  
+    /**
+     * Returns if the item is readable to the given user. It does not check, if the item is readable at all
+     */
+    private fun isReadableToUser(userlevel: Int = 0): Booelan
+    {
+      return (userlevel >= _readable_to)
+    }
+  
+    /**
+     * Returns it this item is readable at all and readable to the given userlevel
+     */
+    fun isReadable(userlevel: Int = 0): Boolean
+    {
+      return (isReadableAtAll() &&  isReadableToUser(userlevel))
+    }
+    
+    /**
+     * Returns if the item is writable a all (independent of the given userlevel)
+     */
+    fun isWritableAtAll(): Boolean
+    {
+      return (_writable_to !== -1)
+    }
+  
+    /**
+     * Returns if the item is writable to the given user. It does not check, if the item is writable at all
+     */
+    private fun isWritableToUser(userlevel: Int = 0): Booelan
+    {
+      return (userlevel >= _writable_to)
+    }
+
+    /**
+     * Returns if the item is writable at all and writable to the given user
+     */
+    fun isWritable(userlevel: Int = 0): Boolean
+    {
+      return (isWritableAtAll() && isWritableToUser(userlevel))
+    }
+    
+    fun getItem(request: String,userlevel: Int = 0,additional: MutableList<String> = mutableListOf()): ItemData
+    {
+      return ItemData()        
+    }
+    
+    /**
+     * Creates an error message for return of the getXXXX methods
+     * @deprecated
+     */
+    private fun error(error_id: String, error_message: String): String
+    {
+        return "{\"result\":\"FAILED\",\"error_code\":\"$error_id\",\"error_message\":\"$error_message\"}"
     }
 
     /**
