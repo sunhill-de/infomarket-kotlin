@@ -54,6 +54,74 @@ open class ItemBase(path: String,
     }
 
     /**
+     * Returns the (default)path to this item
+     * @return String The path to this item
+     */
+    fun getPath(): String
+    {
+      return _path
+    }
+    
+    /**
+     * Returns the internal representation of the unit of this item
+     */
+    fun getUnitInt(): String
+    {
+      return _unit_int
+    }
+    
+    /**
+     * Returns the unit of this item (or " " if no unit)
+     */
+    fun getUnit(): String
+    {
+      return _unit
+    }
+    
+    fun getSemantic(): String
+    {
+      return _semantic
+    }
+    
+    fun getSemanticInt(): String
+    {
+      return _semantic_int
+    }
+    
+    fun getType(): String
+    {
+      return _type
+    }
+    
+    fun getUpdate(): String
+    {
+      return _update
+    }
+    
+    /**
+     * Returns if this item has an error or not
+     */
+    fun hasError(): Boolean
+    {
+      return _error_code !== null
+    }
+    
+    /**
+     * Returns the error code (or raises an exception if no error is defined)
+     */
+    fun getErrorCode(): String
+    {
+      return _error_code!!
+    }
+  
+    /**
+     * Returns the error message (or raises an exception if no error is defined)
+     */
+    fun getErrorMessage(): String
+    {
+      return _error_message!!
+    }
+    /**
      * Translates the internal unit to the displayable unit
      */
     private fun translateUnit(unit_int: String): String
