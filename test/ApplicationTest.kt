@@ -13,7 +13,7 @@ import io.ktor.server.testing.*
 /**
  * Tests some of the standard responses
  */
-class ApplicationTest {
+class InfoMarket {
     @Test
     fun testStatus() {
         withTestApplication({ module(testing = true) }) {

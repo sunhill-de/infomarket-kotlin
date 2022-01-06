@@ -2,8 +2,16 @@ package sunhill.Items
 
 import kotlin.math.roundToInt
 
-data class ItemData(path: String, unit_int: String, unit: String, semantic_int: String, semantic: String,
-                    type: String, update: String, stamp: Int, value: Any?, human_readable_value: Any?) {}
+data class ItemError(val code: String, val message: String) {}
+
+data class ItemData(val path: String, val unit_int: String, val unit: String, val semantic_int: String, val semantic: String,
+                    val type: String, val update: String, val stamp: Long, val value: Any?, val human_readable_value: String,
+                    val request: String) {}
+
+data class ItemMetaData(val path: String, val unit_int: String, val unit: String, val semantic_int: String, val semantic: String,
+                        val type: String, val update: String) {}
+
+
 /**
  * The base class for items. Every item has to define a constructor that gives some essential properties of this
  * item (like type, semantic_type, etc.)
@@ -103,42 +111,6 @@ open class ItemBase(path: String,
     }
     
     /**
-     * Returns the internal representation of the unit of this item
-     */
-    fun getUnitInt(): String
-    {
-      return _unit_int
-    }
-    
-    /**
-     * Returns the unit of this item (or " " if no unit)
-     */
-    fun getUnit(): String
-    {
-      return _unit
-    }
-    
-    fun getSemantic(): String
-    {
-      return _semantic
-    }
-    
-    fun getSemanticInt(): String
-    {
-      return _semantic_int
-    }
-    
-    fun getType(): String
-    {
-      return _type
-    }
-    
-    fun getUpdate(): String
-    {
-      return _update
-    }
-    
-    /**
      * Returns if this item has an error or not
      */
     fun hasError(): Boolean
@@ -182,7 +154,7 @@ open class ItemBase(path: String,
     /**
      * Returns if the item is readable to the given user. It does not check, if the item is readable at all
      */
-    private fun isReadableToUser(userlevel: Int = 0): Booelan
+    private fun isReadableToUser(userlevel: Int = 0): Boolean
     {
       return (userlevel >= _readable_to)
     }
@@ -200,15 +172,15 @@ open class ItemBase(path: String,
      */
     fun isWritableAtAll(): Boolean
     {
-      return (_writable_to !== -1)
+      return (_writeable_to !== -1)
     }
   
     /**
      * Returns if the item is writable to the given user. It does not check, if the item is writable at all
      */
-    private fun isWritableToUser(userlevel: Int = 0): Booelan
+    private fun isWritableToUser(userlevel: Int = 0): Boolean
     {
-      return (userlevel >= _writable_to)
+      return (userlevel >= _writeable_to)
     }
 
     /**
@@ -219,9 +191,25 @@ open class ItemBase(path: String,
       return (isWritableAtAll() && isWritableToUser(userlevel))
     }
     
-    fun getItem(request: String,userlevel: Int = 0,additional: MutableList<String> = mutableListOf()): ItemData
+    fun getItem(request: String,userlevel: Int = 0,additional: MutableList<String> = mutableListOf()): ItemData?
     {
-      return ItemData()        
+        if (hasError())  {
+            return null
+        }
+
+      return ItemData(
+          unit=getUnit(),
+          path=getPath(),
+          unit_int=getUnitInt(),
+          semantic=getSemantic(),
+          semantic_int=getSemanticInt(),
+          type=getType(),
+          update=getUpdate(),
+          stamp=getStamp(),
+          value=getValue(additional),
+          human_readable_value = getHumanReadableValue(additional),
+          request = request
+      )
     }
     
     /**
@@ -422,15 +410,15 @@ open class ItemBase(path: String,
 
     private fun getJSONStamp(): String
     {
-        return getJSONPart("stamp",getStamp() )
+        return getJSONPart("stamp",getStamp().toString() )
     }
 
     /**
      * Returns the current timestamp
      */
-    fun getStamp(): String
+    fun getStamp(): Long
     {
-        return System.currentTimeMillis().toString()
+        return System.currentTimeMillis()
     }
 
     /**
@@ -498,16 +486,23 @@ open class ItemBase(path: String,
         return """"human_readable_value":""""+getCount(request).toString()+"\","
     }
 
-    private fun getJSONHumanReadableValue(additional: MutableList<String>): String
+    private fun getHumanReadableValue(additional: MutableList<String>): String
     {
-        val value: Any = calculateValue(additional)!!
-
-        return getJSONPart("human_readable_value", when (this._unit_int) {
+        val value = calculateValue(additional)
+        if (value == null) {
+            return ""
+        }
+        return when (this._unit_int) {
             "d" -> getDuration(value)
             "K" -> getCapacity(value)
             " " -> value.toString()
             else -> value.toString() + " " + this._unit
-        }, false)
+        }
+    }
+
+    private fun getJSONHumanReadableValue(additional: MutableList<String>): String
+    {
+        return getJSONPart("human_readable_value", getHumanReadableValue(additional) , false)
     }
 
     private fun getDuration(duration:Any): String
