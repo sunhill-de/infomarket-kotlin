@@ -467,7 +467,7 @@ abstract class AbstractItemBase(path : String) {
         }
     }
 
-    fun setItem(request: String, userlevel: Int = 0, value: Any, additional: MutableList<String> = mutableListOf()): ItemError?
+    fun setItem(request: String, value: Any, userlevel: Int = 0, additional: MutableList<String> = mutableListOf()): ItemError?
     {
         if (!isWritableAtAll(additional)) {
             setError("ITEMNOTWRITEABLE","The item is not writeable.")
