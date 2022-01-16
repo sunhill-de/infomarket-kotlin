@@ -85,19 +85,17 @@ class ItemBaseTest {
             val test = ReadOnlyTestItem()
             test.errorCondition()
             assertNull(test.getItem("test.request"))
-
-            val result = test.JSONGetItem("test.request")
-            assertThatJson(result).isObject().containsEntry("result","FAILED")
-            assertThatJson(result).isObject().containsEntry("error_code","TESTERROR")
-            assertThatJson(result).isObject().containsEntry("error_message","This is a test error")
+            assertEquals("TESTERROR",test.getErrorCode())
+            assertEquals("This is a test error",test.getErrorMessage())
+            assertEquals("TESTERROR",test.getError()!!.code)
         }
 
         @Test
         fun testWriteError() {
             var test = ReadOnlyTestItem()
-            var result = test.put("test.request", "ABC")
-            assertThatJson(result).isObject().containsEntry("result","FAILED")
-            assertThatJson(result).isObject().containsEntry("error_code","ITEMNOTWRITEABLE")
+            test.setItem("test.request", "ABC")
+
+            assertEquals("ITEMNOTWRITEABLE",  test.getErrorCode())
         }
 
         @Test
