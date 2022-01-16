@@ -1,5 +1,6 @@
 package sunhill.Items
 
+import junit.framework.Assert.assertNull
 import junit.framework.TestCase.assertEquals
 import org.junit.Test
 import net.javacrumbs.jsonunit.assertj.assertThatJson
@@ -73,10 +74,9 @@ class ItemBaseTest {
         @Test
         fun testSimpleGet() {
             val test = ReadOnlyTestItem()
-            val result = test.JSONGetItem("test.request")
-            assertThatJson(result).isObject().containsEntry("request","test.request")
-            assertThatJson(result).isObject().containsEntry("human_readable_value","16 minutes 40 seconds")
-            assertThatJson(result).isObject().containsEntry("result","OK")
+            val result = test.getItem("test.request")!!
+            assertEquals("test.request",result.request)
+            assertEquals("16 minutes 40 seconds",result.human_readable_value)
         }
 
         @Test
@@ -84,6 +84,8 @@ class ItemBaseTest {
         {
             val test = ReadOnlyTestItem()
             test.errorCondition()
+            assertNull(test.getItem("test.request"))
+
             val result = test.JSONGetItem("test.request")
             assertThatJson(result).isObject().containsEntry("result","FAILED")
             assertThatJson(result).isObject().containsEntry("error_code","TESTERROR")
