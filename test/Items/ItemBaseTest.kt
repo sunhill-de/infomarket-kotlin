@@ -101,15 +101,15 @@ class ItemBaseTest {
         @Test
         fun testGetValue() {
             val test = ReadOnlyTestItem()
-            val result = test.JSONGetValue("test.request")
-            assertEquals("{\"value\":1000}", result)
+            val result = test.getValue("test.request")
+            assertEquals(1000, result)
         }
 
         @Test
         fun testGetHRValue() {
             val test = ReadOnlyTestItem()
-            val result = test.JSONGetHRValue("test.request")
-            assertEquals("{\"human_readable_value\":\"16 minutes 40 seconds\"}", result)
+            val result = test.getHRValue("test.request")
+            assertEquals("16 minutes 40 seconds", result)
         }
 
         @Test
@@ -239,16 +239,16 @@ class ItemBaseTest {
         @Test
         fun testReadError() {
             var test = WriteOnlyTestItem()
-            var result = test.JSONGetItem("test.request")
-            assertThatJson(result).isObject().containsEntry("result","FAILED")
-            assertThatJson(result).isObject().containsEntry("error_code","ITEMNOTREADABLE")
+            var result = test.getItem("test.request")
+            assertNull(result)
+            assertEquals("ITEMNOTREADABLE",test.getErrorCode())
         }
 
         @Test
         fun testWrite() {
             val test = WriteOnlyTestItem()
-            val result = test.put("test.request", 10)
-            assertThatJson(result).isObject().containsEntry("result","OK")
+            val result = test.setItem("test.request", 10)
+            assertTrue(result)
         }
 
     }
@@ -258,15 +258,17 @@ class ItemBaseTest {
         @Test
         fun testInsufficientReadRights() {
             var test = ReadWriteTestItem()
-            var result = test.JSONGetItem("test.request", 0, mutableListOf<String>("2"))
-            assertThatJson(result).isObject().containsEntry("result","FAILED")
-            assertThatJson(result).isObject().containsEntry("error_code","READINGNOTALLOWED")
+            var result = test.getItem("test.request", 0, mutableListOf<String>("2"))
+            assertNull(result)
+            assertEquals("ITEMNOTREADABLETOUSER",test.getErrorCode())
         }
 
         @Test
         fun testInsufficientWriteRights() {
             var test = ReadWriteTestItem()
             var result = test.put("test.request", 10, 0, mutableListOf<String>("2"))
+            assertFalse(result)
+            
             assertThatJson(result).isObject().containsEntry("result","FAILED")
             assertThatJson(result).isObject().containsEntry("error_code","WRITINGNOTALLOWED")
         }
