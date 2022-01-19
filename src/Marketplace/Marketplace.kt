@@ -7,14 +7,34 @@ abstract class Marketplace {
     abstract fun getMarketeerList(): Array<MarketeerBase>
 
     /**
-     * Returns a error as a json string
+     * Takes an ItemError and wraps it into a JSON String
+     */
+    protected fun wrapItemErrorToJSON(val input: ItemError): String
+    {
+        return """{"result":"FAILED","error_code":""""+input.code+"""","error_message":""""+input.message+""""}"""
+    }
+    
+    protected fun wrapItemDataToJSON(val input: ItemData): String
+    {
+    }
+    
+    protected fun wrapItemMetaDataToJSON(val input: ItemMetaData): String
+    {
+    }
+    
+    protected fun wrapToJSON(val input: Any): String
+    {
+    }
+    
+    /**
+     * Returns a error as an ItemError
      * @param code String The error code
      * @param message String A more descriptive error message
-     * @return String The json error message
+     * @return ItemError an ItemError object
      */
-    protected fun error(code: String, message: String): String
+    protected fun error(code: String, message: String): ItemError
     {
-        return """{"result":"failed","error_code":""""+code+"""","error_message":""""+message+""""}"""
+        return ItemError(code,message)
     }
 
     /**
@@ -22,7 +42,18 @@ abstract class Marketplace {
      * @param path String The path for the requested item
      * @return string: The json representation of the item or an error message
      */
-    fun getItem(path : String): String
+    fun getItemAsJSON(path: String): String
+    {
+        val marketeers = getMarketeerList()
+
+        for (marketeer in marketeers) {
+            var response = marketeer.getItem(path)
+            if (response != null) return wrapItemDataToJSON(response)
+        }
+        return wrapItemErrorToJSON(error("ITEMNOTFOUND","The requested item'"+path+"' was not found."))
+    }
+
+    fun getItemRaw(path: String): Any
     {
         val marketeers = getMarketeerList()
 
@@ -31,6 +62,10 @@ abstract class Marketplace {
             if (response != null) return response
         }
         return error("ITEMNOTFOUND","The requested item'"+path+"' was not found.")
+    }
+    
+    fun getItem(path : String): String
+    {
     }
 
     /**
