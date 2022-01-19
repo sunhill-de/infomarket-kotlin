@@ -1,6 +1,6 @@
 package sunhill.marketeers
 
-import sunhill.Items.ItemBase
+import sunhill.Items.AbstractItemBase
 
 abstract class MarketeerBase {
 
@@ -16,26 +16,26 @@ abstract class MarketeerBase {
   /**
    * Returns the answer of an item or null if this marketeer offers no matching item
    */
-  fun getItem(search: String,userlevel: Int = 0): String?
+  fun getItem(search: String,userlevel: Int = 0): ItemData
   {
     val result = searchItem(search,userlevel)
     if (result == null) {
       return null
     } else {
-      return result.item.JSONGetItem(search,userlevel = userlevel,additional = result.additional)
+      return result.item.getItem(search,userlevel = userlevel,additional = result.additional)
     }
   }
 
   /**
    * Returns the value of an item or null if this marketeer offers no matching item
    */
-  fun getValue(search: String,userlevel: Int = 0): String?
+  fun getValue(search: String,userlevel: Int = 0): Any?
   {
     val result = searchItem(search,userlevel)
     if (result == null) {
       return null
     } else {
-      return result.item.JSONGetValue(search,userlevel = userlevel,additional = result.additional)
+      return result.item.getValue(search,userlevel = userlevel,additional = result.additional)
     }
   }
 
@@ -48,7 +48,7 @@ abstract class MarketeerBase {
     if (result == null) {
       return null
     } else {
-      return result.item.JSONGetHRValue(search,userlevel = userlevel,additional = result.additional)
+      return result.item.getHRValue(search,userlevel = userlevel,additional = result.additional)
     }
   }
 
