@@ -182,31 +182,66 @@ abstract class Marketplace {
      * @param path String A possible filter for the offering (default "*" means no filter)
      * @return String The json answer (array) of all offerings
      */
-    fun getOffering(path: String = "*"): String
+    fun getOffering(path: String = "*"): List<String>
     {
-        val result = mutableListOf<String>();
+        val result = mutableListOf<String>()
         val marketeers = getMarketeerList()
 
         for (marketeer in marketeers) {
             result.addAll(marketeer.getOffering(path))
         }
         val unique = result.distinct()
-        var returning = """{"offering":["""
-        for ((index,line) in unique.withIndex()) {
-            returning += (if (index == 0) "" else ",")+"\""+line+"\"\n"
+        return result.toList()
+    }
+
+    /**
+     * Returns all items that this marketplace is able to offer that meer the given condtion an wraps it into json
+     * @return String
+     */
+    fun getOfferingAsJSON(path: String = "*"): String
+    {
+        val offering = getOffering()
+        var result = "{["
+        var first = true
+        for (entry in offering) {
+            result += (if (first) {""} else {","})+"\""+offering+"\""
+            first = false
         }
-        return returning+"]}"
+        return result + "]}"
     }
 
     /**
      * Returns all items that meet the given condition
      * @param path String A possible filter for the offering (default "*" means no filter)
-     * @return String The json answer (array) of all items
+     * @return List if Items
      */
-    fun getAllItems(path: String): String
+    fun getAllItems(path: String = "*"): List<ItemData>
     {
-        return """{"items":["""+
-               """]}"""
+        val items = getOffering(path)
+        val temp = mutableListOf<ItemData>()
+        for (item_name in items) {
+            val item = getItem(item_name)
+            if (item is ItemData) {
+                temp.add(item)
+            }
+        }
+        return temp.toList()
+    }
+
+    /**
+     * Returns all items that this marketplace is able to offer that meer the given condtion an wraps it into json
+     * @return String
+     */
+    fun geAllItemsAsJSON(path: String = "*"): String
+    {
+        val offering = getAllItems(path)
+        var result = "{["
+        var first = true
+        for (entry in offering) {
+            result += (if (first) {""} else {","})+wrapItemDataToJSON(entry)
+            first = false
+        }
+        return result + "]}"
     }
 
     /**
@@ -214,10 +249,17 @@ abstract class Marketplace {
      * @param path String A possible filter for the offering (default "*" means no filter)
      * @return String The json answer (array) of all item values
      */
-    fun getAllValues(path: String): String
+    fun getAllValues(path: String): Map<String, Any>
     {
-        return """{"items":["""+
-                """]}"""
+        val items = getOffering(path)
+        val temp = mutableMapOf<String,Any>()
+        for (item_name in items) {
+            val item = getItem(item_name)
+            if (item is ItemData) {
+                temp.put(item.path,item.value!!)
+            }
+        }
+        return temp.toMap()
     }
 
     /**

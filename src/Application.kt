@@ -43,11 +43,11 @@ fun Application.module(testing: Boolean = false) {
         }
 
         get ("/offering/{path}") {
-            call.respondText(MyMarketplace.getOffering(call.parameters["path"]!!), contentType = io.ktor.http.ContentType.Application.Json)
+            call.respondText(MyMarketplace.getOfferingAsJSON(call.parameters["path"]!!), contentType = io.ktor.http.ContentType.Application.Json)
         }
 
         get ("/allitems/{path}") {
-            call.respondText(MyMarketplace.getAllItems(call.parameters["path"]!!), contentType = io.ktor.http.ContentType.Application.Json)
+            call.respondText(MyMarketplace.getAllItemsAsJSON(call.parameters["path"]!!), contentType = io.ktor.http.ContentType.Application.Json)
         }
 
         get ("/allvalues/{path}") {
