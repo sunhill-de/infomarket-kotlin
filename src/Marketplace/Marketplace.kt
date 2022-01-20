@@ -1,29 +1,87 @@
 package sunhill.Marketplace
 
+import sunhill.Items.ItemData
+import sunhill.Items.ItemError
+import sunhill.Items.ItemMetaData
 import sunhill.marketeers.MarketeerBase
 
 abstract class Marketplace {
 
     abstract fun getMarketeerList(): Array<MarketeerBase>
 
+    // ******************************* Answer helpers **********************************
+    private fun wrapJSONPair(key: String, value: String, addComma: Boolean=true): String
+    {
+        return "\""+key+"\":\""+value+"\""+(if(addComma) {","} else {""})
+    }
+
     /**
      * Takes an ItemError and wraps it into a JSON String
      */
-    protected fun wrapItemErrorToJSON(val input: ItemError): String
+    protected fun wrapItemErrorToJSON(input: ItemError): String
     {
-        return """{"result":"FAILED","error_code":""""+input.code+"""","error_message":""""+input.message+""""}"""
+        return "{"+
+                wrapJSONPair("result","FAILED")+
+                wrapJSONPair("error_code",input.code)+
+                wrapJSONPair("error_message",input.message,false)+
+                "}"
     }
-    
-    protected fun wrapItemDataToJSON(val input: ItemData): String
+
+    /**
+     * Takes an ItemData and wraps it into a JSON String
+     */
+    protected fun wrapItemDataToJSON(input: ItemData): String
     {
+        return "{"+
+                wrapJSONPair("result","OK")+
+                wrapJSONPair("path", input.path)+
+                wrapJSONPair("unit_int",input.unit_int)+
+                wrapJSONPair("unit",input.unit)+
+                wrapJSONPair("semantic_int",input.semantic_int)+
+                wrapJSONPair("semantic",input.semantic)+
+                wrapJSONPair("type",input.type)+
+                wrapJSONPair("update",input.update)+
+                wrapJSONPair("stamp",input.stamp.toString())+
+                wrapJSONPair("value",input.value!!.toString())+
+                wrapJSONPair("human_readable_value",input.human_readable_value)+
+                wrapJSONPair("request",input.request)+"}"
     }
-    
-    protected fun wrapItemMetaDataToJSON(val input: ItemMetaData): String
+
+    /**
+     * Takes an ItemMetaData and wraps it into a JSON String
+     */
+    protected fun wrapItemMetaDataToJSON(input: ItemMetaData): String
     {
+        return "{"+
+                wrapJSONPair("result","OK")+
+                wrapJSONPair("path", input.path)+
+                wrapJSONPair("unit_int",input.unit_int)+
+                wrapJSONPair("unit",input.unit)+
+                wrapJSONPair("semantic_int",input.semantic_int)+
+                wrapJSONPair("semantic",input.semantic)+
+                wrapJSONPair("type",input.type)+
+                wrapJSONPair("update",input.update)+"}"
     }
-    
-    protected fun wrapToJSON(val input: Any): String
+
+    /**
+     * Takes any input from the marketeers and tries to convert it to a JSON answer
+     */
+    protected fun wrapToJSON(input: Any): String
     {
+        return when (input) {
+            is ItemError -> {
+                wrapItemErrorToJSON(input)
+            }
+            is ItemData -> {
+                wrapItemDataToJSON(input)
+            }
+            is ItemMetaData -> {
+                wrapItemMetaDataToJSON(input)
+            }
+            else -> {
+                wrapItemErrorToJSON(error("UNKOWNINPUT","Can't process the input data."))
+            }
+        }
     }
     
     /**
@@ -44,16 +102,14 @@ abstract class Marketplace {
      */
     fun getItemAsJSON(path: String): String
     {
-        val marketeers = getMarketeerList()
-
-        for (marketeer in marketeers) {
-            var response = marketeer.getItem(path)
-            if (response != null) return wrapItemDataToJSON(response)
-        }
-        return wrapItemErrorToJSON(error("ITEMNOTFOUND","The requested item'"+path+"' was not found."))
+        return wrapToJSON(getItem(path))
     }
 
-    fun getItemRaw(path: String): Any
+    /**
+     * Tries to find the item given by path. If it finds some then return a ItemData object, if not
+     * return a ItemError object
+     */
+    fun getItem(path : String): Any
     {
         val marketeers = getMarketeerList()
 
@@ -62,10 +118,6 @@ abstract class Marketplace {
             if (response != null) return response
         }
         return error("ITEMNOTFOUND","The requested item'"+path+"' was not found.")
-    }
-    
-    fun getItem(path : String): String
-    {
     }
 
     /**
@@ -73,15 +125,27 @@ abstract class Marketplace {
      * @param path String The path for the requested item
      * @return string: The json representation of the value of the item or an error message
      */
-    fun getValue(path : String): String
+    fun getValue(path : String): Any?
     {
-        val marketeers = getMarketeerList()
-
-        for (marketeer in marketeers) {
-            var response = marketeer.getValue(path)
-            if (response != null) return response
+        val item = getItem(path)
+        return if (item is ItemData) {
+            item.value
+        } else {
+           null
         }
-        return error("ITEMNOTFOUND","The requested item'"+path+"' was not found.")
+    }
+
+    /**
+     * Returns the value from an item as a json string (or an error message)
+     */
+    fun getValueAsJSON(path: String): String
+    {
+        val item = getItem(path)
+        return when (item) {
+            is ItemError -> wrapItemErrorToJSON(item)
+            is ItemData -> "{"+wrapJSONPair("value",item.value.toString())
+            else -> wrapItemErrorToJSON(error("UNEXPECTEDRESULT","Unexpected result from getItem()"))
+        }
     }
 
     /**
@@ -89,16 +153,29 @@ abstract class Marketplace {
      * @param path String The path for the requested item
      * @return string: The json representation of the human readable value of the item or an error message
      */
-    fun getHRValue(path : String): String
+    fun getHumanReadableValue(path : String): String?
     {
-        val marketeers = getMarketeerList()
-
-        for (marketeer in marketeers) {
-            var response = marketeer.getHRValue(path)
-            if (response != null) return response
+        val item = getItem(path)
+        return if (item is ItemData) {
+            item.human_readable_value
+        } else {
+            null
         }
-        return error("ITEMNOTFOUND","The requested item'"+path+"' was not found.")
     }
+
+    /**
+     * Returns the human readable value from an item as a json string (or an error message)
+     */
+    fun getHumanReadableValueAsJSON(path: String): String
+    {
+        val item = getItem(path)
+        return when (item) {
+            is ItemError -> wrapItemErrorToJSON(item)
+            is ItemData -> "{"+wrapJSONPair("value",item.human_readable_value)
+            else -> wrapItemErrorToJSON(error("UNEXPECTEDRESULT","Unexpected result from getItem()"))
+        }
+    }
+
 
     /**
      * Returns all items that this marketplace is able to offer that meet the given condition
