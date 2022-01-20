@@ -423,6 +423,7 @@ abstract class AbstractItemBase(path : String) {
     // ***************************** The main methods *************************************
     fun getItem(request: String,userlevel: Int = 0,additional: MutableList<String> = mutableListOf()): ItemData?
     {
+
         if (!isReadableAtAll(additional)) {
             setError("ITEMNOTREADABLE","The item is not readable.")
         } else if (!isReadableToUser(userlevel,additional)) {
@@ -525,6 +526,15 @@ abstract class AbstractItemBase(path : String) {
     {
         var size : Int = capacity.toString().toInt()
         return ""+size+" Bytes"
+    }
+
+    /**
+     * Tests, if the given string contains wildcards
+     * @return true if yes, false if not
+     */
+    private fun hasWildcards(test: String): Boolean
+    {
+        return (test.findAnyOf(listOf("*","?","#")) !== null)
     }
 
 }
