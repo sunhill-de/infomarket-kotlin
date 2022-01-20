@@ -108,7 +108,7 @@ class ItemBaseTest {
         @Test
         fun testGetHRValue() {
             val test = ReadOnlyTestItem()
-            val result = test.getHRValue("test.request")
+            val result = test.getHumanReadableValue("test.request")
             assertEquals("16 minutes 40 seconds", result)
         }
 
