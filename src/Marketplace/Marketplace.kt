@@ -10,7 +10,7 @@ abstract class Marketplace {
     abstract fun getMarketeerList(): Array<MarketeerBase>
 
     // ******************************* Answer helpers **********************************
-    private fun wrapJSONPair(key: String, value: String, addComma: Boolean=true): String
+    private fun wrapToJSON(key: String, value: String, addComma: Boolean=true): String
     {
         return "\""+key+"\":\""+value+"\""+(if(addComma) {","} else {""})
     }
@@ -18,19 +18,19 @@ abstract class Marketplace {
     /**
      * Takes an ItemError and wraps it into a JSON String
      */
-    protected fun wrapItemErrorToJSON(input: ItemError): String
+    private fun wrapToJSON(input: ItemError): String
     {
         return "{"+
-                wrapJSONPair("result","FAILED")+
-                wrapJSONPair("error_code",input.code)+
-                wrapJSONPair("error_message",input.message,false)+
+                wrapToJSON("result","FAILED")+
+                wrapToJSON("error_code",input.code)+
+                wrapToJSON("error_message",input.message,false)+
                 "}"
     }
-
-    /**
+    
+     /**
      * Takes an ItemData and wraps it into a JSON String
      */
-    protected fun wrapItemDataToJSON(input: ItemData): String
+    private fun wrapToJSON(input: ItemData): String
     {
         return "{"+
                 wrapJSONPair("result","OK")+
@@ -46,11 +46,11 @@ abstract class Marketplace {
                 wrapJSONPair("human_readable_value",input.human_readable_value)+
                 wrapJSONPair("request",input.request)+"}"
     }
-
+    
     /**
      * Takes an ItemMetaData and wraps it into a JSON String
      */
-    protected fun wrapItemMetaDataToJSON(input: ItemMetaData): String
+    protected fun wrapToJSON(input: ItemMetaData): String
     {
         return "{"+
                 wrapJSONPair("result","OK")+
@@ -61,27 +61,6 @@ abstract class Marketplace {
                 wrapJSONPair("semantic",input.semantic)+
                 wrapJSONPair("type",input.type)+
                 wrapJSONPair("update",input.update)+"}"
-    }
-
-    /**
-     * Takes any input from the marketeers and tries to convert it to a JSON answer
-     */
-    protected fun wrapToJSON(input: Any): String
-    {
-        return when (input) {
-            is ItemError -> {
-                wrapItemErrorToJSON(input)
-            }
-            is ItemData -> {
-                wrapItemDataToJSON(input)
-            }
-            is ItemMetaData -> {
-                wrapItemMetaDataToJSON(input)
-            }
-            else -> {
-                wrapItemErrorToJSON(error("UNKOWNINPUT","Can't process the input data."))
-            }
-        }
     }
     
     /**
@@ -142,9 +121,9 @@ abstract class Marketplace {
     {
         val item = getItem(path)
         return when (item) {
-            is ItemError -> wrapItemErrorToJSON(item)
-            is ItemData -> "{"+wrapJSONPair("value",item.value.toString())
-            else -> wrapItemErrorToJSON(error("UNEXPECTEDRESULT","Unexpected result from getItem()"))
+            is ItemError -> wrapToJSON(item)
+            is ItemData -> "{"+wrapToJSON("value",item.value.toString())
+            else -> wrapToJSON(error("UNEXPECTEDRESULT","Unexpected result from getItem()"))
         }
     }
 
@@ -170,9 +149,9 @@ abstract class Marketplace {
     {
         val item = getItem(path)
         return when (item) {
-            is ItemError -> wrapItemErrorToJSON(item)
-            is ItemData -> "{"+wrapJSONPair("value",item.human_readable_value)
-            else -> wrapItemErrorToJSON(error("UNEXPECTEDRESULT","Unexpected result from getItem()"))
+            is ItemError -> wrapToJSON(item)
+            is ItemData -> "{"+wrapToJSON("value",item.human_readable_value)
+            else -> wrapToJSON(error("UNEXPECTEDRESULT","Unexpected result from getItem()"))
         }
     }
 
