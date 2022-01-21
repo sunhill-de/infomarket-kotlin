@@ -421,9 +421,25 @@ abstract class AbstractItemBase(path : String) {
     }
 
     // ***************************** The main methods *************************************
-    fun getItem(request: String,userlevel: Int = 0,additional: MutableList<String> = mutableListOf()): ItemData?
+    /**
+     * Returns true, if this item provides the given item
+     * @param request: String The request string
+     * @param userlevel: Integer The current userlevel
+     * @return True if the requested item is provided otherwise false
+     */
+    fun providesItem(request: String, userlevel: Int = 0): Boolean
     {
+        val additional = mutableListOf<String>() // Is ignored
+        return matches(request,userlevel,additional)
+    }
 
+    fun getItem(request: String,userlevel: Int = 0): ItemData?
+    {
+        val additional = mutableListOf<String>()
+        if (!matches(request,userlevel,additional)) { // If item is not provided return null
+            return null
+        }
+        // Item is provided, go on
         if (!isReadableAtAll(additional)) {
             setError("ITEMNOTREADABLE","The item is not readable.")
         } else if (!isReadableToUser(userlevel,additional)) {

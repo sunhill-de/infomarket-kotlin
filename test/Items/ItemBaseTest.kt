@@ -1,7 +1,7 @@
 package sunhill.Items
 
 import junit.framework.Assert.assertNull
-import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.*
 import org.junit.Test
 import net.javacrumbs.jsonunit.assertj.assertThatJson
 
@@ -70,6 +70,20 @@ class ItemBaseTest {
     }
 
     class ReadOnlyItemTest {
+
+        @Test
+        fun testProvidesItemPass()
+        {
+            val test = ReadOnlyTestItem()
+            assertTrue(test.providesItem("test.request"))
+        }
+
+        @Test
+        fun testProvidesItemFail()
+        {
+            val test = ReadOnlyTestItem()
+            assertFalse(test.providesItem("test.request"))
+        }
 
         @Test
         fun testSimpleGet() {

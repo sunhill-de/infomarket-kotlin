@@ -1,10 +1,11 @@
 package sunhill.marketeers
 
 import sunhill.Items.AbstractItemBase
+import sunhill.Items.ItemData
 
 abstract class MarketeerBase {
 
-  data class SearchResult(val item: ItemBase, val additional: MutableList<String>)
+  data class SearchResult(val item: AbstractItemBase, val additional: MutableList<String>)
 
   /**
    * Searches this marketeer if it provides the item "search" with the userLevel
