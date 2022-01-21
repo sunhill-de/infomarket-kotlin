@@ -51,11 +51,11 @@ fun Application.module(testing: Boolean = false) {
         }
 
         get ("/allvalues/{path}") {
-            call.respondText(MyMarketplace.getAllValues(call.parameters["path"]!!), contentType = io.ktor.http.ContentType.Application.Json)
+            call.respondText(MyMarketplace.getAllValuesAsJSON(call.parameters["path"]!!), contentType = io.ktor.http.ContentType.Application.Json)
         }
 
         get ("/allhrvalues/{path}") {
-            call.respondText(MyMarketplace.getAllHRValues(call.parameters["path"]!!), contentType = io.ktor.http.ContentType.Application.Json)
+            call.respondText(MyMarketplace.getAllHumanReadableValuesAsJSON(call.parameters["path"]!!), contentType = io.ktor.http.ContentType.Application.Json)
         }
 
         get ("{...}") {

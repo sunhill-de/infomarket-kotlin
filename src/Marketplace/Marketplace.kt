@@ -10,6 +10,21 @@ abstract class Marketplace {
     abstract fun getMarketeerList(): Array<MarketeerBase>
 
     // ******************************* Answer helpers **********************************
+    /**
+     * For the cases when the type is not defined at compile time
+     */
+    private fun wrapToJSON(value: Any?): String
+    {
+        return when (value) {
+            is String -> "\""+value+"\""
+            is ItemData -> wrapToJSON(value)
+            is ItemError -> wrapToJSON(value)
+            is ItemMetaData -> wrapToJSON(value)
+            else -> wrapToJSON(error("UNEXPECTEDPARAM","wrapToJSON was passed an unexpected param"))
+        }
+
+    }
+
     private fun wrapToJSON(key: String, value: String, addComma: Boolean=true): String
     {
         return "\""+key+"\":\""+value+"\""+(if(addComma) {","} else {""})
@@ -33,18 +48,18 @@ abstract class Marketplace {
     private fun wrapToJSON(input: ItemData): String
     {
         return "{"+
-                wrapJSONPair("result","OK")+
-                wrapJSONPair("path", input.path)+
-                wrapJSONPair("unit_int",input.unit_int)+
-                wrapJSONPair("unit",input.unit)+
-                wrapJSONPair("semantic_int",input.semantic_int)+
-                wrapJSONPair("semantic",input.semantic)+
-                wrapJSONPair("type",input.type)+
-                wrapJSONPair("update",input.update)+
-                wrapJSONPair("stamp",input.stamp.toString())+
-                wrapJSONPair("value",input.value!!.toString())+
-                wrapJSONPair("human_readable_value",input.human_readable_value)+
-                wrapJSONPair("request",input.request)+"}"
+                wrapToJSON("result","OK")+
+                wrapToJSON("path", input.path)+
+                wrapToJSON("unit_int",input.unit_int)+
+                wrapToJSON("unit",input.unit)+
+                wrapToJSON("semantic_int",input.semantic_int)+
+                wrapToJSON("semantic",input.semantic)+
+                wrapToJSON("type",input.type)+
+                wrapToJSON("update",input.update)+
+                wrapToJSON("stamp",input.stamp.toString())+
+                wrapToJSON("value",input.value!!.toString())+
+                wrapToJSON("human_readable_value",input.human_readable_value)+
+                wrapToJSON("request",input.request)+"}"
     }
     
     /**
@@ -53,16 +68,48 @@ abstract class Marketplace {
     protected fun wrapToJSON(input: ItemMetaData): String
     {
         return "{"+
-                wrapJSONPair("result","OK")+
-                wrapJSONPair("path", input.path)+
-                wrapJSONPair("unit_int",input.unit_int)+
-                wrapJSONPair("unit",input.unit)+
-                wrapJSONPair("semantic_int",input.semantic_int)+
-                wrapJSONPair("semantic",input.semantic)+
-                wrapJSONPair("type",input.type)+
-                wrapJSONPair("update",input.update)+"}"
+                wrapToJSON("result","OK")+
+                wrapToJSON("path", input.path)+
+                wrapToJSON("unit_int",input.unit_int)+
+                wrapToJSON("unit",input.unit)+
+                wrapToJSON("semantic_int",input.semantic_int)+
+                wrapToJSON("semantic",input.semantic)+
+                wrapToJSON("type",input.type)+
+                wrapToJSON("update",input.update)+"}"
     }
-    
+
+    private fun wrapToJSON(input: List<String>): String
+    {
+        var result = "{["
+        var first = true
+        for (entry in input) {
+            result += (if (first) {""} else {","})+"\""+entry+"\""
+            first = false
+        }
+        return result + "]}"
+    }
+
+    private fun wrapToJSON(input: List<ItemData>,getter: (item: ItemData) -> String): String
+    {
+        var result = "{["
+        var first = true
+        for (entry in input) {
+            result += (if (first) {""} else {","})+"\""+getter(entry)+"\""
+            first = false
+        }
+        return result + "]}"
+    }
+
+    private fun wrapToJSON(input: Map<String, Any>): String
+    {
+        var result = "{["
+        var first = true
+        input.forEach {
+            key,value -> result +=  (if (first) {""} else {","})+wrapToJSON(key,value.toString())
+        }
+        return result + "]}"
+    }
+
     /**
      * Returns a error as an ItemError
      * @param code String The error code
@@ -120,11 +167,7 @@ abstract class Marketplace {
     fun getValueAsJSON(path: String): String
     {
         val item = getItem(path)
-        return when (item) {
-            is ItemError -> wrapToJSON(item)
-            is ItemData -> "{"+wrapToJSON("value",item.value.toString())
-            else -> wrapToJSON(error("UNEXPECTEDRESULT","Unexpected result from getItem()"))
-        }
+        return wrapToJSON(item)
     }
 
     /**
@@ -155,7 +198,6 @@ abstract class Marketplace {
         }
     }
 
-
     /**
      * Returns all items that this marketplace is able to offer that meet the given condition
      * @param path String A possible filter for the offering (default "*" means no filter)
@@ -169,24 +211,16 @@ abstract class Marketplace {
         for (marketeer in marketeers) {
             result.addAll(marketeer.getOffering(path))
         }
-        val unique = result.distinct()
-        return result.toList()
+        return result.distinct().toList()
     }
 
     /**
-     * Returns all items that this marketplace is able to offer that meer the given condtion an wraps it into json
+     * Returns all items that this marketplace is able to offer that meet the given condition and wraps it into json
      * @return String
      */
     fun getOfferingAsJSON(path: String = "*"): String
     {
-        val offering = getOffering()
-        var result = "{["
-        var first = true
-        for (entry in offering) {
-            result += (if (first) {""} else {","})+"\""+offering+"\""
-            first = false
-        }
-        return result + "]}"
+        return wrapToJSON(getOffering(path))
     }
 
     /**
@@ -208,19 +242,12 @@ abstract class Marketplace {
     }
 
     /**
-     * Returns all items that this marketplace is able to offer that meer the given condtion an wraps it into json
+     * Returns all items that this marketplace is able to offer that meet the given condition and wraps it into json
      * @return String
      */
-    fun geAllItemsAsJSON(path: String = "*"): String
+    fun getAllItemsAsJSON(path: String = "*"): String
     {
-        val offering = getAllItems(path)
-        var result = "{["
-        var first = true
-        for (entry in offering) {
-            result += (if (first) {""} else {","})+wrapItemDataToJSON(entry)
-            first = false
-        }
-        return result + "]}"
+        return wrapToJSON(getAllItems(path)) { it -> wrapToJSON(it) }
     }
 
     /**
@@ -235,7 +262,7 @@ abstract class Marketplace {
         for (item_name in items) {
             val item = getItem(item_name)
             if (item is ItemData) {
-                temp.put(item.path,item.value!!)
+                temp[item.path] = item.value!!
             }
         }
         return temp.toMap()
@@ -246,22 +273,86 @@ abstract class Marketplace {
      * @param path String A possible filter for the offering (default "*" means no filter)
      * @return String The json answer (array) of all items human readable values
      */
-    fun getAllHRValues(path: String): String
+    fun getAllValuesAsJSON(path: String): String
     {
-        return """{"items":["""+
-                """]}"""
+        return wrapToJSON(getAllValues(path))
     }
 
-    fun getItemsByList(list: String): String
+    /**
+     * Returns all item values that meet the given condition
+     * @param path String A possible filter for the offering (default "*" means no filter)
+     * @return String The json answer (array) of all item values
+     */
+    fun getAllHumanReadableValues(path: String): Map<String, Any>
     {
-        return """{"items":["""+
-                """]}"""
+        val items = getOffering(path)
+        val temp = mutableMapOf<String,Any>()
+        for (item_name in items) {
+            val item = getItem(item_name)
+            if (item is ItemData) {
+                temp[item.path] = item.human_readable_value
+            }
+        }
+        return temp.toMap()
     }
 
-    fun getItemsByList(list: List<String>): String
+    /**
+     * Returns all item human readable values that meet the given condition
+     * @param path String A possible filter for the offering (default "*" means no filter)
+     * @return String The json answer (array) of all items human readable values
+     */
+    fun getAllHumanReadableValuesAsJSON(path: String): String
     {
-        return """{"items":["""+
-                """]}"""
+        return wrapToJSON(getAllHumanReadableValues(path))
+    }
+
+    /**
+     * Takes a json encoded list and converts it to a List of Strings
+     */
+    private fun parseJSONtoList(input: String): List<String>
+    {
+        return listOf<String>()
+    }
+
+    /**
+     * Takes a json encoded list and returns the items that are in this list
+     */
+    fun getItemsByList(list: String): List<ItemData>
+    {
+        return getItemsByList(parseJSONtoList(list))
+    }
+
+    /**
+     * Takes a list of strings and return the items that are in this list as a list of items
+     */
+    fun getItemsByList(list: List<String>): List<ItemData>
+    {
+        val result = mutableListOf<ItemData>()
+        list.forEach {
+            item -> run {
+                val found = getItem(item)
+                if (found is ItemData) {
+                    result.add(found)
+                }
+            }
+        }
+        return result.toList()
+    }
+
+    /**
+     * Takes a list of string and returns the items that are in this list as a json list
+     */
+    fun getItemsByListAsJSON(list: List<String>): String
+    {
+        return wrapToJSON(getItemsByList(list))
+    }
+
+    /**
+     * Takes a json encoded list of strings and returns the items that are in this list as a json list
+     */
+    fun getItemsByListAsJSON(list: String): String
+    {
+        return wrapToJSON(getItemsByList(list))
     }
 
     fun getValuesByList(list: String): String
