@@ -1,6 +1,6 @@
 package sunhill.Marketeers
 
-import junit.framework.Assert.assertEquals
+import junit.framework.TestCase.assertEquals
 import org.junit.Test
 import sunhill.Items.ItemBase
 import sunhill.marketeers.MarketeerBase

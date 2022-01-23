@@ -239,20 +239,23 @@ abstract class AbstractItemBase(path : String) {
     /**
      * Gets the item value and does some checks
      */
-    protected fun getValue(additional: MutableList<String>): Any
+    protected fun getValue(additional: MutableList<String>): Any?
     {
+        if ((additional.count() > 0 ) && (additional.last() == "count")) {
+            return getCount()
+        }
         val value = calculateValue(additional)
         if (value == null) {
             setError("NOVALUE","calculateValue() returns no value")
-            return 0
+            return null
         } else {
             return value
         }
     }
 
-    fun setValue()
+    protected fun setValue(additional: MutableList<String>, value: Any): Boolean
     {
-
+        return false
     }
 
     /**
@@ -490,12 +493,22 @@ abstract class AbstractItemBase(path : String) {
 
     fun getItemValue(request: String, userlevel: Int = 0): Any?
     {
-        return  null
+        val item = getItem(request, userlevel)
+        if (item == null) {
+            return null
+        } else {
+            return item.value
+        }
     }
 
     fun getItemHumanReadableValue(request: String, userlevel: Int = 0): String?
     {
-        return null
+        val item = getItem(request, userlevel)
+        if (item == null) {
+            return null
+        } else {
+            return item.human_readable_value
+        }
     }
 
     fun setItem(request: String, value: Any, userlevel: Int = 0, additional: MutableList<String> = mutableListOf()): ItemError?

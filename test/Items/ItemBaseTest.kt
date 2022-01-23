@@ -82,7 +82,7 @@ class ItemBaseTest {
         fun testProvidesItemFail()
         {
             val test = ReadOnlyTestItem()
-            assertFalse(test.providesItem("test.request"))
+            assertFalse(test.providesItem("not.existing.request"))
         }
 
         @Test
