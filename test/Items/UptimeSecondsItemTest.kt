@@ -3,6 +3,7 @@ package sunhill.Items
 import org.junit.Test
 import io.mockk.every
 import io.mockk.spyk
+import junit.framework.Assert.assertEquals
 import sunhill.DataPool.UptimeDatapool
 import sunhill.Items.Uptime.*
 import net.javacrumbs.jsonunit.assertj.assertThatJson
@@ -17,10 +18,10 @@ class UptimeSecondsItemTest {
 
         val test: UptimeSecondsItem = UptimeSecondsItem()
         test.setDataPool(pool)
-        val result: String = test.JSONGetItem("test.request")
-        assertThatJson(result).isObject().containsEntry("request","test.request")
-        assertThatJson(result).isObject().containsEntry("type","Float")
-        assertThatJson(result).isObject().containsEntry("human_readable_value","5340.99 s")
+        val result = test.getItem("test.request")!!
+        assertEquals(result.request,"test.request")
+        assertEquals(result.type,"Float")
+        assertEquals(result.human_readable_value,"5340.99 s")
     }
 
 }

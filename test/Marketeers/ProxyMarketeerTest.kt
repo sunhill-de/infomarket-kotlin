@@ -39,7 +39,7 @@ class ProxyMarketeerTest {
     fun testDummy()
     {
         val test = dummyItem()
-        assertEquals("""{"value":"ABC"}""",test.JSONGetValue("test.item"))
+        assertEquals("ABC",test.getItemValue("test.item"))
     }
 
     @Test
@@ -48,6 +48,6 @@ class ProxyMarketeerTest {
         val target = testMarketeer()
         val test = ProxyMarketeer("proxy",target)
 
-        assertEquals("""{"value":"ABC"}""", test.getValue("proxy.test.item"))
+        assertEquals("ABC", test.getValue("proxy.test.item"))
     }
 }

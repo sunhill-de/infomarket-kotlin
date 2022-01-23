@@ -113,16 +113,16 @@ class ItemBaseTest {
         }
 
         @Test
-        fun testGetValue() {
+        fun testGetItemValue() {
             val test = ReadOnlyTestItem()
-            val result = test.getValue("test.request")
+            val result = test.getItemValue("test.request")
             assertEquals(1000, result)
         }
 
         @Test
         fun testGetHRValue() {
             val test = ReadOnlyTestItem()
-            val result = test.getHumanReadableValue("test.request")
+            val result = test.getItemHumanReadableValue("test.request")
             assertEquals("16 minutes 40 seconds", result)
         }
 
@@ -210,7 +210,7 @@ class ItemBaseTest {
         fun testGetCountSimple()
         {
             val test = IndexedTestItem()
-            assertEquals(2,test.getCount("test.count"))
+            assertEquals(2,test.getItemValue("test.count"))
         }
 
         @Test
@@ -235,15 +235,15 @@ class ItemBaseTest {
         fun testGetCountMultiindex1()
         {
             val test = MultiIndexedTestItem()
-            assertEquals(2,test.getCount("test.count"))
+            assertEquals(2,test.getItemValue("test.count"))
         }
 
         @Test
         fun testGetCountMultiindex2()
         {
             val test = MultiIndexedTestItem()
-            assertEquals(2,test.getCount("test.0.request.count"))
-            assertEquals(3,test.getCount("test.1.request.count"))
+            assertEquals(2,test.getItemValue("test.0.request.count"))
+            assertEquals(3,test.getItemValue("test.1.request.count"))
         }
 
     }
@@ -262,7 +262,7 @@ class ItemBaseTest {
         fun testWrite() {
             val test = WriteOnlyTestItem()
             val result = test.setItem("test.request", 10)
-            assertTrue(result)
+            assertNull(result)
         }
 
     }
@@ -272,7 +272,7 @@ class ItemBaseTest {
         @Test
         fun testInsufficientReadRights() {
             var test = ReadWriteTestItem()
-            var result = test.getItem("test.request", 0, mutableListOf<String>("2"))
+            var result = test.getItem("test.request", 0)
             assertNull(result)
             assertEquals("ITEMNOTREADABLETOUSER",test.getErrorCode())
         }
@@ -280,26 +280,27 @@ class ItemBaseTest {
         @Test
         fun testInsufficientWriteRights() {
             var test = ReadWriteTestItem()
-            var result = test.put("test.request", 10, 0, mutableListOf<String>("2"))
-            assertFalse(result)
-            
-            assertThatJson(result).isObject().containsEntry("result","FAILED")
-            assertThatJson(result).isObject().containsEntry("error_code","WRITINGNOTALLOWED")
+            var result = test.setItem("test.request", 10, 0)
+            assertFalse(result == null)
+            if (result is ItemError) {
+                assertEquals(result.code,"WRITINGNOTALLOWED")
+            }
         }
 
         @Test
         fun testSufficientReadRights() {
             var test = ReadWriteTestItem()
-            var result = test.JSONGetItem("test.request",  userlevel=20,mutableListOf<String>("2"))
-            assertThatJson(result).isObject().containsEntry("result","OK")
-            assertThatJson(result).isObject().containsEntry("human_readable_value","20")
+            var result = test.getItem("test.request",  userlevel=20)
+            if (result is ItemData) {
+                assertEquals(result.human_readable_value, "20")
+            }
         }
 
         @Test
         fun testSufficientWriteRights() {
             var test = ReadWriteTestItem()
-            var result = test.put("test.request", 10, userlevel = 20, mutableListOf<String>("2"))
-            assertThatJson(result).isObject().containsEntry("result","OK")
+            var result = test.setItem("test.request", 10, userlevel = 20)
+            assertTrue(result == null)
         }
 
     }
