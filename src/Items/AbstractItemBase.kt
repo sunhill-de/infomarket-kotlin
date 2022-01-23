@@ -239,7 +239,7 @@ abstract class AbstractItemBase(path : String) {
     /**
      * Gets the item value and does some checks
      */
-    fun getValue(additional: MutableList<String>): Any
+    protected fun getValue(additional: MutableList<String>): Any
     {
         val value = calculateValue(additional)
         if (value == null) {
@@ -260,7 +260,7 @@ abstract class AbstractItemBase(path : String) {
      * @return Int if -1 then this permutation is uncountable otherwise the count of items in this permutation
      * Remark: A uncountable permutation means that the number can't be calculated
      */
-    fun getCount(request: String): Int
+    protected fun getCount(request: String): Int
     {
         val request_parts = request.split(".")
         val path_parts = _path.split(".")
@@ -466,8 +466,12 @@ abstract class AbstractItemBase(path : String) {
         }
     }
 
-    fun getItemMetadata(request: String, userlevel: Int = 0, additional: MutableList<String> = mutableListOf()): ItemMetaData?
+    fun getItemMetadata(request: String, userlevel: Int = 0): ItemMetaData?
     {
+        val additional = mutableListOf<String>()
+        if (!matches(request,userlevel,additional)) { // If item is not provided return null
+            return null
+        }
         val result = ItemMetaData(
             unit=getUnit(),
             path=getPath(),
@@ -482,6 +486,16 @@ abstract class AbstractItemBase(path : String) {
         } else {
             result
         }
+    }
+
+    fun getItemValue(request: String, userlevel: Int = 0): Any?
+    {
+        return  null
+    }
+
+    fun getItemHumanReadableValue(request: String, userlevel: Int = 0): String?
+    {
+        return null
     }
 
     fun setItem(request: String, value: Any, userlevel: Int = 0, additional: MutableList<String> = mutableListOf()): ItemError?
