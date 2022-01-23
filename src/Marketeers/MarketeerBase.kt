@@ -17,13 +17,13 @@ abstract class MarketeerBase {
   /**
    * Returns the answer of an item or null if this marketeer offers no matching item
    */
-  fun getItem(search: String,userlevel: Int = 0): ItemData
+  fun getItem(search: String,userlevel: Int = 0): ItemData?
   {
     val result = searchItem(search,userlevel)
     if (result == null) {
       return null
     } else {
-      return result.item.getItem(search,userlevel = userlevel,additional = result.additional)
+      return result.item.getItem(search,userlevel = userlevel)
     }
   }
 
@@ -36,7 +36,7 @@ abstract class MarketeerBase {
     if (result == null) {
       return null
     } else {
-      return result.item.getValue(search,userlevel = userlevel,additional = result.additional)
+      return result.item.getItemValue(search,userlevel = userlevel)
     }
   }
 
@@ -49,7 +49,7 @@ abstract class MarketeerBase {
     if (result == null) {
       return null
     } else {
-      return result.item.getHRValue(search,userlevel = userlevel,additional = result.additional)
+      return result.item.getItemHumanReadableValue(search,userlevel = userlevel)
     }
   }
 
